@@ -27,6 +27,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class RoomRepositoryIntegrationTest {
 
+  private static final LocalDateTime CURRENT_TIME = LocalDateTime.of(2026, 9, 17, 12, 0);
+
   @Container
   static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4")
           .withDatabaseName("chalet_test")
@@ -85,11 +87,9 @@ class RoomRepositoryIntegrationTest {
 
   @Test
   void returnsFirstAvailableRoomWhenNoBookingOverlaps() {
-    DbRoom available = roomRepository.findAvailableRoomForBooking(
-                    roomType.getId(),
-                    LocalDate.of(2026, 10, 10),
-                    LocalDate.of(2026, 10, 12))
-            .orElseThrow();
+    DbRoom available = findAvailableRoom(
+            LocalDate.of(2026, 10, 10),
+            LocalDate.of(2026, 10, 12));
 
     assertThat(available.getId()).isEqualTo(firstRoom.getId());
   }
@@ -103,11 +103,9 @@ class RoomRepositoryIntegrationTest {
             BookingStatus.CONFIRMED,
             null);
 
-    DbRoom available = roomRepository.findAvailableRoomForBooking(
-                    roomType.getId(),
-                    LocalDate.of(2026, 10, 11),
-                    LocalDate.of(2026, 10, 13))
-            .orElseThrow();
+    DbRoom available = findAvailableRoom(
+            LocalDate.of(2026, 10, 11),
+            LocalDate.of(2026, 10, 13));
 
     assertThat(available.getId()).isEqualTo(secondRoom.getId());
   }
@@ -119,13 +117,11 @@ class RoomRepositoryIntegrationTest {
             LocalDate.of(2026, 10, 10),
             LocalDate.of(2026, 10, 12),
             BookingStatus.HELD,
-            LocalDateTime.now().plusMinutes(5));
+            CURRENT_TIME.plusMinutes(5));
 
-    DbRoom available = roomRepository.findAvailableRoomForBooking(
-                    roomType.getId(),
-                    LocalDate.of(2026, 10, 10),
-                    LocalDate.of(2026, 10, 12))
-            .orElseThrow();
+    DbRoom available = findAvailableRoom(
+            LocalDate.of(2026, 10, 10),
+            LocalDate.of(2026, 10, 12));
 
     assertThat(available.getId()).isEqualTo(secondRoom.getId());
   }
@@ -137,13 +133,27 @@ class RoomRepositoryIntegrationTest {
             LocalDate.of(2026, 10, 10),
             LocalDate.of(2026, 10, 12),
             BookingStatus.HELD,
-            LocalDateTime.now().minusMinutes(1));
+            CURRENT_TIME.minusMinutes(1));
 
-    DbRoom available = roomRepository.findAvailableRoomForBooking(
-                    roomType.getId(),
-                    LocalDate.of(2026, 10, 10),
-                    LocalDate.of(2026, 10, 12))
-            .orElseThrow();
+    DbRoom available = findAvailableRoom(
+            LocalDate.of(2026, 10, 10),
+            LocalDate.of(2026, 10, 12));
+
+    assertThat(available.getId()).isEqualTo(firstRoom.getId());
+  }
+
+  @Test
+  void holdExpiringExactlyNowDoesNotBlockRoom() {
+    saveBooking(
+            firstRoom,
+            LocalDate.of(2026, 10, 10),
+            LocalDate.of(2026, 10, 12),
+            BookingStatus.HELD,
+            CURRENT_TIME);
+
+    DbRoom available = findAvailableRoom(
+            LocalDate.of(2026, 10, 10),
+            LocalDate.of(2026, 10, 12));
 
     assertThat(available.getId()).isEqualTo(firstRoom.getId());
   }
@@ -157,13 +167,20 @@ class RoomRepositoryIntegrationTest {
             BookingStatus.CONFIRMED,
             null);
 
-    DbRoom available = roomRepository.findAvailableRoomForBooking(
-                    roomType.getId(),
-                    LocalDate.of(2026, 10, 12),
-                    LocalDate.of(2026, 10, 14))
-            .orElseThrow();
+    DbRoom available = findAvailableRoom(
+            LocalDate.of(2026, 10, 12),
+            LocalDate.of(2026, 10, 14));
 
     assertThat(available.getId()).isEqualTo(firstRoom.getId());
+  }
+
+  private DbRoom findAvailableRoom(LocalDate checkIn, LocalDate checkOut) {
+    return roomRepository.findAvailableRoomForBooking(
+                    roomType.getId(),
+                    checkIn,
+                    checkOut,
+                    CURRENT_TIME)
+            .orElseThrow();
   }
 
   private DbRoom room(String number) {
