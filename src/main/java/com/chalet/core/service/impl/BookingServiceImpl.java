@@ -54,17 +54,19 @@ public class BookingServiceImpl implements BookingService {
             .orElseThrow(() -> new ResourceNotFoundException(
                     CUSTOMER_NOT_FOUND.formatted(request.getCustomerId())));
 
+    LocalDateTime currentTime = now();
     DbRoom room = roomRepository.findAvailableRoomForBooking(
                     request.getRoomTypeId(),
                     request.getCheckInDate(),
-                    request.getCheckOutDate())
+                    request.getCheckOutDate(),
+                    currentTime)
             .orElseThrow(() -> new RoomAlreadyBookedException("No room available"));
 
     DbBooking booking = bookingMapper.toEntity(request);
     booking.setCustomer(customer);
     booking.setRoom(room);
     booking.setBookingStatus(BookingStatus.HELD);
-    booking.setHoldExpiry(now().plus(bookingProperties.getHoldDuration()));
+    booking.setHoldExpiry(currentTime.plus(bookingProperties.getHoldDuration()));
 
     return bookingMapper.toDto(bookingRepository.save(booking));
   }
@@ -78,7 +80,8 @@ public class BookingServiceImpl implements BookingService {
       throw new IllegalStateException(BOOKING_NOT_ON_HOLD);
     }
 
-    if (booking.getHoldExpiry() == null || booking.getHoldExpiry().isBefore(now())) {
+    LocalDateTime currentTime = now();
+    if (booking.getHoldExpiry() == null || !booking.getHoldExpiry().isAfter(currentTime)) {
       throw new RoomAlreadyBookedException(BOOKING_HOLD_EXPIRED);
     }
 
