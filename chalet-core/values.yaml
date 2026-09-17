@@ -19,7 +19,12 @@ mysql:
 
   database: chalet_db
   username: root
-  password: root
+
+  auth:
+    existingSecret: ""
+    rootPassword: ""
+    rootPasswordKey: mysql-root-password
+
   storage: 2Gi
 
 spring:
