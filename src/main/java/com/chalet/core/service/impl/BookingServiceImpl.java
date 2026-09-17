@@ -1,5 +1,10 @@
 package com.chalet.core.service.impl;
 
+import static com.chalet.core.util.Constants.BOOKING_HOLD_EXPIRED;
+import static com.chalet.core.util.Constants.BOOKING_NOT_FOUND;
+import static com.chalet.core.util.Constants.BOOKING_NOT_ON_HOLD;
+import static com.chalet.core.util.Constants.CUSTOMER_NOT_FOUND;
+
 import com.chalet.core.dto.request.BookingRequest;
 import com.chalet.core.dto.response.BookingResponse;
 import com.chalet.core.entity.DbBooking;
@@ -18,7 +23,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import static com.chalet.core.util.Constants.CUSTOMER_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -43,36 +47,35 @@ public class BookingServiceImpl implements BookingService {
   @Transactional
   public BookingResponse createBooking(BookingRequest request) {
     DbCustomer customer = customerRepository.findById(request.getCustomerId())
-            .orElseThrow(() -> new ResourceNotFoundException(CUSTOMER_NOT_FOUND.formatted(request.getCustomerId())));
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    CUSTOMER_NOT_FOUND.formatted(request.getCustomerId())));
 
     DbRoom room = roomRepository.findAvailableRoomForBooking(
                     request.getRoomTypeId(),
                     request.getCheckInDate(),
                     request.getCheckOutDate())
-            .orElseThrow(() ->
-                    new RoomAlreadyBookedException("No room available"));
+            .orElseThrow(() -> new RoomAlreadyBookedException("No room available"));
 
     DbBooking booking = bookingMapper.toEntity(request);
-
     booking.setCustomer(customer);
     booking.setRoom(room);
     booking.setBookingStatus(BookingStatus.HELD);
     booking.setHoldExpiry(LocalDateTime.now().plusMinutes(10));
-    booking = bookingRepository.save(booking);
-    return bookingMapper.toDto(booking);
+
+    return bookingMapper.toDto(bookingRepository.save(booking));
   }
 
+  @Override
   @Transactional
   public BookingResponse confirmBooking(Long bookingId) {
-    DbBooking booking = bookingRepository.findById(bookingId)
-            .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+    DbBooking booking = findBooking(bookingId);
 
     if (booking.getBookingStatus() != BookingStatus.HELD) {
-      throw new IllegalStateException("Booking is not on hold.");
+      throw new IllegalStateException(BOOKING_NOT_ON_HOLD);
     }
 
-    if (booking.getHoldExpiry().isBefore(LocalDateTime.now())) {
-      throw new RoomAlreadyBookedException("Booking hold expired.");
+    if (booking.getHoldExpiry() == null || booking.getHoldExpiry().isBefore(LocalDateTime.now())) {
+      throw new RoomAlreadyBookedException(BOOKING_HOLD_EXPIRED);
     }
 
     booking.setBookingStatus(BookingStatus.CONFIRMED);
@@ -81,27 +84,23 @@ public class BookingServiceImpl implements BookingService {
     return bookingMapper.toDto(booking);
   }
 
+  @Override
+  @Transactional
   public void cancelBooking(Long bookingId) {
-    DbBooking dbBooking = bookingRepository.findById(bookingId)
-            .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
-
-    dbBooking.setBookingStatus(BookingStatus.CANCELLED);
-    dbBooking.setHoldExpiry(null);
-
+    DbBooking booking = findBooking(bookingId);
+    booking.setBookingStatus(BookingStatus.CANCELLED);
+    booking.setHoldExpiry(null);
   }
 
   @Override
+  @Transactional(readOnly = true)
   public BookingResponse getBookingById(Long id) {
-    return null;
+    return bookingMapper.toDto(findBooking(id));
   }
 
-  @Override
-  public BookingResponse getBookingByRoomId(Long id) {
-    return null;
-  }
-
-  @Override
-  public BookingResponse getBookingByCustomerIdAndCheckInDateGreaterThan(Long id) {
-    return null;
+  private DbBooking findBooking(Long bookingId) {
+    return bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    BOOKING_NOT_FOUND.formatted(bookingId)));
   }
 }
