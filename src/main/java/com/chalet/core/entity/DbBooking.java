@@ -13,6 +13,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Getter;
@@ -74,5 +75,10 @@ public class DbBooking {
   @Column(name = "booking_status", nullable = false)
   private BookingStatus bookingStatus;
 
+  @Column(name = "hold_expiry")
   private LocalDateTime holdExpiry;
+
+  @Version
+  @Column(nullable = false)
+  private Long version;
 }
