@@ -132,6 +132,24 @@ helm install chalet-core ./chalet-core \
 
 The chart provisions a dedicated MySQL application user and keeps its password separate from the MySQL root credential. Existing Kubernetes Secrets can be supplied independently with `mysql.auth.existingSecret` for the root credential and `mysql.auth.appExistingSecret` for the application credential.
 
+### Centralized environment configuration
+
+Environment-specific **non-secret** values are owned by the private `aaruchalet/aaru-platform-config` repository. This repository continues to own the Helm chart templates and safe standalone defaults; the platform-config repository supplies deployment-time overlays.
+
+With both repositories checked out as siblings, a development deployment can layer the centralized values over this chart:
+
+```bash
+helm upgrade --install chalet-core ./chalet-core \
+  -f ../aaru-platform-config/services/chalet-core/base/values.yaml \
+  -f ../aaru-platform-config/services/chalet-core/environments/dev.yaml \
+  --set mysql.auth.rootPassword='<root-password>' \
+  --set mysql.auth.appPassword='<app-password>'
+```
+
+The same structure exists for `qa` and `prod`. Production values that have not been explicitly defined remain absent rather than being guessed. Passwords and other secret values do **not** belong in `aaru-platform-config`; they must continue to come from Kubernetes Secrets or a dedicated secret backend.
+
+There is no automated deployment consumer yet. CI remains build/test/coverage only, so the external configuration is applied only when an operator or future CD workflow explicitly supplies these values.
+
 ## Continuous integration
 
 The standard CI workflow runs on pull requests and pushes to `develop` and performs only basic repository quality checks:
