@@ -97,6 +97,15 @@ Run the local stack:
 docker compose up -d
 ```
 
+The Compose stack uses a dedicated MySQL application account (`chalet_app`) instead of connecting the service as `root`. The checked-in password defaults are development-only and can be overridden before startup:
+
+```bash
+export CHALET_DB_ROOT_PASSWORD='<local-root-password>'
+export CHALET_DB_APP_USER='chalet_app'
+export CHALET_DB_APP_PASSWORD='<local-app-password>'
+docker compose up -d
+```
+
 ## Helm
 
 The chart is located at `./chalet-core`.
@@ -104,17 +113,24 @@ The chart is located at `./chalet-core`.
 Lint and render it locally:
 
 ```bash
-helm lint ./chalet-core --set mysql.auth.rootPassword=local-placeholder
-helm template chalet-core ./chalet-core --set mysql.auth.rootPassword=local-placeholder
+helm lint ./chalet-core \
+  --set mysql.auth.rootPassword=local-root-placeholder \
+  --set mysql.auth.appPassword=local-app-placeholder
+
+helm template chalet-core ./chalet-core \
+  --set mysql.auth.rootPassword=local-root-placeholder \
+  --set mysql.auth.appPassword=local-app-placeholder
 ```
 
 Install:
 
 ```bash
-helm install chalet-core ./chalet-core --set mysql.auth.rootPassword='<password>'
+helm install chalet-core ./chalet-core \
+  --set mysql.auth.rootPassword='<root-password>' \
+  --set mysql.auth.appPassword='<app-password>'
 ```
 
-The chart also supports supplying an existing Kubernetes Secret instead of an inline password.
+The chart provisions a dedicated MySQL application user and keeps its password separate from the MySQL root credential. Existing Kubernetes Secrets can be supplied independently with `mysql.auth.existingSecret` for the root credential and `mysql.auth.appExistingSecret` for the application credential.
 
 ## Continuous integration
 
@@ -132,6 +148,7 @@ The standard CI workflow runs on pull requests and pushes to `develop` and perfo
 - MySQL 8.4
 - Flyway-managed schema
 - Hibernate schema validation with `ddl-auto=validate`
+- Dedicated application database account; root is reserved for database initialization/administration
 
 ## Roadmap
 
