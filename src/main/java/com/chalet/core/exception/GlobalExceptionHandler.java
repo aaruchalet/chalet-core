@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,6 +41,13 @@ public class GlobalExceptionHandler {
     return ResponseEntity
             .status(HttpStatus.CONFLICT)
             .body(exception.getMessage());
+  }
+
+  @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+  public ResponseEntity<?> handleOptimisticLock(ObjectOptimisticLockingFailureException exception) {
+    return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body("Booking was modified by another request. Refresh and retry.");
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
