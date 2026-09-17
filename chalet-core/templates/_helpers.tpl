@@ -60,3 +60,10 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Resolve the MySQL credentials secret name. Users may provide an existing Secret.
+*/}}
+{{- define "chalet-core.mysqlSecretName" -}}
+{{- default "chalet-core-mysql-secret" .Values.mysql.auth.existingSecret -}}
+{{- end }}
