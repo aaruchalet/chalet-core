@@ -1,10 +1,10 @@
 # 🏔️ Chalet Core
 
-<p >
+<p>
   <strong>A cloud-native Spring Boot backend for a Resort Management System demonstrating modern Java development, containerization, Kubernetes orchestration, and CI/CD using GitHub Actions and AWS.</strong>
 </p>
 
-<p >
+<p>
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&logo=springboot)
@@ -30,20 +30,27 @@
                                ▼
                      GitHub Actions CI
                                │
-        ┌──────────────────────┼──────────────────────┐
-        │                      │                      │
-        ▼                      ▼                      ▼
-  Gradle Build          Docker Build        AWS Authentication
-        │                      │                      │
-        └──────────────┬───────┴──────────────────────┘
-                       ▼
-                Amazon ECR Registry
-                       │
-                       ▼
-                  Helm Chart
-                       │
-                       ▼
-          Amazon EKS Deployment (Next Phase)
+                 ┌─────────────┴─────────────┐
+                 ▼                           ▼
+           Gradle / Tests              Docker Build
+                 │                           │
+                 └─────────────┬─────────────┘
+                               ▼
+                         Helm Validation
+
+Manual AWS workflow
+       │
+       ▼
+AWS Authentication
+       │
+       ▼
+Amazon ECR Registry
+       │
+       ▼
+Helm Chart
+       │
+       ▼
+Amazon EKS Deployment (Next Phase)
 ```
 
 ---
@@ -59,6 +66,7 @@
 - Spring Boot Actuator
 - Dockerized Application
 - Kubernetes-ready Deployment using Helm
+- Secret-backed MySQL credentials in Helm
 - Persistent MySQL Storage for Local Development
 - Automated CI Pipeline with GitHub Actions
 - Docker Image Publishing to Amazon ECR
@@ -91,11 +99,10 @@ chalet-core/
 │   ├── main/
 │   └── test/
 │
-├── helm/
-│   └── chalet-core/
-│       ├── Chart.yaml
-│       ├── values.yaml
-│       └── templates/
+├── chalet-core/
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   └── templates/
 │
 ├── .github/
 │   └── workflows/
@@ -103,7 +110,7 @@ chalet-core/
 │       └── aws-auth.yml
 │
 ├── Dockerfile
-├── docker-compose.yml
+├── compose.yaml
 ├── build.gradle
 ├── Makefile
 └── README.md
@@ -117,11 +124,8 @@ chalet-core/
 
 ```bash
 git clone https://github.com/aaruchalet/chalet-core.git
-
 cd chalet-core
 ```
-
----
 
 ## Build
 
@@ -129,23 +133,21 @@ cd chalet-core
 ./gradlew clean build
 ```
 
----
-
 ## Run Locally
 
 ```bash
 ./gradlew bootRun
 ```
 
-Application
+Application:
 
-```
+```text
 http://localhost:8080
 ```
 
-Health Endpoint
+Health endpoint:
 
-```
+```text
 http://localhost:8080/actuator/health
 ```
 
@@ -153,13 +155,13 @@ http://localhost:8080/actuator/health
 
 # 🐳 Docker
 
-Build
+Build:
 
 ```bash
 docker build -t chalet-core .
 ```
 
-Run
+Run:
 
 ```bash
 docker compose up -d
@@ -169,58 +171,55 @@ docker compose up -d
 
 # ☸️ Helm Deployment
 
-The application is packaged and deployed using **Helm**, Kubernetes' package manager.
+The Helm chart lives in the repository's `chalet-core/` directory.
 
-Install
-
-```bash
-helm install chalet-core ./helm/chalet-core
-```
-
-Upgrade
+Install:
 
 ```bash
-helm upgrade chalet-core ./helm/chalet-core
+helm install chalet-core ./chalet-core
 ```
 
-Verify
+Upgrade:
+
+```bash
+helm upgrade chalet-core ./chalet-core
+```
+
+Verify:
 
 ```bash
 kubectl get pods
-
 kubectl get deployments
-
 kubectl get services
 ```
 
 ---
 
-# 🔄 Continuous Integration Pipeline
+# 🔄 Continuous Integration
 
-Every push or pull request automatically performs:
+The standard Gradle CI workflow runs on pull requests and pushes to `develop` and performs:
 
-- Checkout Repository
-- Setup Java 21
-- Gradle Build
-- Build Docker Image
-- Authenticate with AWS
-- Login to Amazon ECR
-- Tag Docker Image
-- Push Docker Image to Amazon ECR
+- Checkout
+- Java 21 setup
+- Gradle build and tests
+- Docker image build
+- Helm chart validation
+
+AWS authentication and ECR publishing are handled by the separate `aws-auth.yml` workflow, which is currently triggered manually with `workflow_dispatch`.
 
 ---
 
 # 📦 Docker Images
 
-Every Docker image is uniquely tagged using the Git commit SHA.
+ECR images are tagged using the Git commit SHA.
 
-Example
+Example:
 
-```
+```text
 712532372065.dkr.ecr.ap-south-1.amazonaws.com/chalet-core:<commit-sha>
 ```
 
-This ensures every build is reproducible and traceable.
+This keeps published images traceable to source commits.
 
 ---
 
@@ -228,27 +227,22 @@ This ensures every build is reproducible and traceable.
 
 - MySQL 8.4
 - Flyway Database Migrations
-- Hibernate Validation (`ddl-auto=validate`)
-- Persistent storage for local development using Docker Volumes and Kubernetes Persistent Volumes
-- Production deployments can be configured to use an external database (e.g. Amazon RDS)
+- Hibernate schema validation (`ddl-auto=validate`)
+- Persistent storage for local development using Docker volumes and Kubernetes persistent volumes
+- Helm supports secret-backed MySQL credentials
+- Production deployments can be configured to use an external database such as Amazon RDS
 
 ---
 
 # 🩺 Health Checks
 
-Spring Boot Actuator provides health endpoints for Kubernetes.
+Spring Boot Actuator exposes:
 
-Endpoint
-
-```
+```text
 /actuator/health
 ```
 
-Used for
-
-- Startup Probe
-- Readiness Probe
-- Liveness Probe
+The Helm deployment uses the endpoint for startup, readiness, and liveness probes.
 
 ---
 
@@ -264,6 +258,7 @@ Used for
 - Docker Compose
 - Kubernetes Setup
 - Helm Charts
+- Kubernetes Secrets for database credentials
 - GitHub Actions CI
 - Amazon ECR Integration
 
@@ -274,7 +269,6 @@ Used for
 
 ## 📌 Planned
 
-- Kubernetes Secrets
 - Ingress Controller
 - Horizontal Pod Autoscaler (HPA)
 - Prometheus Monitoring
@@ -286,7 +280,7 @@ Used for
 
 ---
 
-# 📈 CI/CD Pipeline
+# 📈 Delivery Pipeline
 
 ```text
 Developer
@@ -295,13 +289,17 @@ Developer
 GitHub Repository
      │
      ▼
-GitHub Actions
+GitHub Actions CI
      │
-     ├── Checkout
-     ├── Gradle Build
+     ├── Gradle Build + Tests
      ├── Docker Build
+     └── Helm Validation
+
+Manual AWS workflow
+     │
      ├── AWS Authentication
-     ├── Push Docker Image
+     ├── ECR Login
+     └── Push Image
      ▼
 Amazon ECR
      │
