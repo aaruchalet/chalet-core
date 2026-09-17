@@ -39,7 +39,10 @@ jobs:
         uses: azure/setup-helm@v4
 
       - name: Lint Helm Chart
-        run: helm lint ./chalet-core
+        run: helm lint ./chalet-core --set mysql.auth.rootPassword=ci-placeholder
 
       - name: Render Helm Templates
-        run: helm template chalet-core ./chalet-core > /dev/null
+        run: >-
+          helm template chalet-core ./chalet-core
+          --set mysql.auth.rootPassword=ci-placeholder
+          > /dev/null
