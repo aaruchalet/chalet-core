@@ -9,13 +9,15 @@ import org.springframework.data.repository.query.Param;
 
 public interface RoomRepository extends JpaRepository<DbRoom, Long> {
 
+  boolean existsByRoomNumber(String roomNumber);
+
   @Query(value = """
            SELECT r.*
              FROM room r
                LEFT JOIN booking b ON b.room_id = r.id\s
                    AND b.check_in_date < :checkOut
                    AND b.check_out_date > :checkIn
-                   AND (b.booking_status = 'CONFIRMED'OR (b.booking_status = 'HELD'AND b.hold_expiry > NOW()))
+                   AND (b.booking_status = 'CONFIRMED' OR (b.booking_status = 'HELD' AND b.hold_expiry > NOW()))
                WHERE r.room_type_id = :roomTypeId
                    AND r.room_status = 'AVAILABLE'
                    AND b.id IS NULL
