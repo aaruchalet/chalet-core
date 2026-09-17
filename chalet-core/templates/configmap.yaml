@@ -7,6 +7,5 @@ metadata:
 data:
   SPRING_DATASOURCE_URL: jdbc:mysql://chalet-core-mysql-service:{{ .Values.mysql.service.port }}/{{ .Values.mysql.database }}
   SPRING_DATASOURCE_USERNAME: {{ .Values.mysql.username | quote }}
-  SPRING_DATASOURCE_PASSWORD: {{ .Values.mysql.password | quote }}
   SERVER_PORT: {{ .Values.service.port | quote }}
   SPRING_PROFILES_ACTIVE: {{ .Values.spring.profile | quote }}

@@ -19,11 +19,17 @@ spec:
       initContainers:
         - name: wait-for-mysql
           image: {{ .Values.mysql.image }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chalet-core.mysqlSecretName" . }}
+                  key: {{ .Values.mysql.auth.rootPasswordKey }}
           command:
             - sh
             - -c
             - |
-              until mysqladmin ping -h chalet-core-mysql-service -uroot -proot --silent; do
+              until mysqladmin ping -h chalet-core-mysql-service -uroot -p"$MYSQL_ROOT_PASSWORD" --silent; do
                 echo "Waiting for MySQL..."
                 sleep 2
               done
@@ -41,6 +47,13 @@ spec:
           envFrom:
             - configMapRef:
                 name: chalet-core-config
+
+          env:
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chalet-core.mysqlSecretName" . }}
+                  key: {{ .Values.mysql.auth.rootPasswordKey }}
 
           startupProbe:
             httpGet:
