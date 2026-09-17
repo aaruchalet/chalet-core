@@ -11,7 +11,7 @@ A Spring Boot backend for a resort-management system, built with Java 21, MySQL,
 - Spring Boot Actuator health checks
 - Docker support
 - Helm deployment manifests
-- Automated CI with tests, JaCoCo coverage, Docker build validation, and Helm validation
+- Automated CI with build, tests, and JaCoCo coverage
 
 ## Tech stack
 
@@ -118,27 +118,24 @@ The chart also supports supplying an existing Kubernetes Secret instead of an in
 
 ## Continuous integration
 
-The standard CI workflow runs on pull requests and pushes to `develop` and performs only repository quality checks:
+The standard CI workflow runs on pull requests and pushes to `develop` and performs only basic repository quality checks:
 
-- Gradle build and automated tests
+- Gradle build
+- Automated tests
 - JaCoCo coverage report generation
-- Coverage report artifact upload
-- Docker image build validation
-- Helm lint
-- Helm template rendering
+- JaCoCo report artifact upload
 
-**CI does not authenticate to AWS and does not publish images to Amazon ECR.** Cloud publishing/deployment is intentionally out of the current pipeline.
+**CI does not authenticate to AWS, log in to ECR, publish images, or deploy infrastructure.** Docker, Helm, AWS, and deployment checks are intentionally kept outside the current CI pipeline.
 
 ## Database
 
 - MySQL 8.4
 - Flyway-managed schema
 - Hibernate schema validation with `ddl-auto=validate`
-- Database-level constraints for core booking and pricing invariants
 
 ## Roadmap
 
-Future deployment work may include ECR/EKS, ingress, autoscaling, observability, security scanning, and automated CD. These are not part of the current CI pipeline.
+Future work may include additional database invariants, ECR/EKS, ingress, autoscaling, observability, security scanning, and automated CD. These are not part of the current CI pipeline.
 
 ## Author
 
