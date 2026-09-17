@@ -12,4 +12,10 @@ public class Constants {
   public static final String CUSTOMER_NOT_FOUND = "Customer with id %d not found.";
   public static final String CUSTOMER_EMAIL_ALREADY_EXISTS = "Email already exists.";
   public static final String CUSTOMER_PHONE_NUMBER_ALREADY_EXISTS = "Phone number already exists.";
+
+  // Booking
+  public static final String BOOKING_NOT_FOUND = "Booking with id %d not found.";
+  public static final String BOOKING_NOT_ON_HOLD = "Booking is not on hold.";
+  public static final String BOOKING_HOLD_EXPIRED = "Booking hold expired.";
+  public static final String BOOKING_CANCELLED_SUCCESSFULLY = "Booking cancelled successfully.";
 }
