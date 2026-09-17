@@ -5,6 +5,7 @@ import static com.chalet.core.util.Constants.BOOKING_NOT_FOUND;
 import static com.chalet.core.util.Constants.BOOKING_NOT_ON_HOLD;
 import static com.chalet.core.util.Constants.CUSTOMER_NOT_FOUND;
 
+import com.chalet.core.config.BookingProperties;
 import com.chalet.core.dto.request.BookingRequest;
 import com.chalet.core.dto.response.BookingResponse;
 import com.chalet.core.entity.DbBooking;
@@ -18,6 +19,7 @@ import com.chalet.core.repository.BookingRepository;
 import com.chalet.core.repository.CustomerRepository;
 import com.chalet.core.repository.RoomRepository;
 import com.chalet.core.service.BookingService;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,8 @@ public class BookingServiceImpl implements BookingService {
   private final BookingMapper bookingMapper;
   private final RoomRepository roomRepository;
   private final CustomerRepository customerRepository;
+  private final BookingProperties bookingProperties;
+  private final Clock clock;
 
   @Override
   public List<BookingResponse> findBookingsByCustomerId(Long customerId) {
@@ -60,7 +64,7 @@ public class BookingServiceImpl implements BookingService {
     booking.setCustomer(customer);
     booking.setRoom(room);
     booking.setBookingStatus(BookingStatus.HELD);
-    booking.setHoldExpiry(LocalDateTime.now().plusMinutes(10));
+    booking.setHoldExpiry(now().plus(bookingProperties.getHoldDuration()));
 
     return bookingMapper.toDto(bookingRepository.save(booking));
   }
@@ -74,7 +78,7 @@ public class BookingServiceImpl implements BookingService {
       throw new IllegalStateException(BOOKING_NOT_ON_HOLD);
     }
 
-    if (booking.getHoldExpiry() == null || booking.getHoldExpiry().isBefore(LocalDateTime.now())) {
+    if (booking.getHoldExpiry() == null || booking.getHoldExpiry().isBefore(now())) {
       throw new RoomAlreadyBookedException(BOOKING_HOLD_EXPIRED);
     }
 
@@ -102,5 +106,9 @@ public class BookingServiceImpl implements BookingService {
     return bookingRepository.findById(bookingId)
             .orElseThrow(() -> new ResourceNotFoundException(
                     BOOKING_NOT_FOUND.formatted(bookingId)));
+  }
+
+  private LocalDateTime now() {
+    return LocalDateTime.now(clock);
   }
 }

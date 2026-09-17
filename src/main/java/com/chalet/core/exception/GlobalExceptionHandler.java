@@ -16,38 +16,40 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
   @ExceptionHandler(DuplicateResourceException.class)
-  public ResponseEntity<?> handleDuplicate(DuplicateResourceException exception) {
+  public ResponseEntity<ApiResponse<Void>> handleDuplicate(DuplicateResourceException exception) {
     return ResponseEntity
             .status(HttpStatus.CONFLICT)
-            .body(exception.getMessage());
+            .body(ApiResponse.failure(exception.getMessage()));
   }
 
   @ExceptionHandler(ResourceNotFoundException.class)
-  public ResponseEntity<?> handleResourceNotFond(ResourceNotFoundException exception) {
+  public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException exception) {
     return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
-            .body(exception.getMessage());
+            .body(ApiResponse.failure(exception.getMessage()));
   }
 
   @ExceptionHandler(RoomAlreadyBookedException.class)
-  public ResponseEntity<?> handleRoomNotAvailable(RoomAlreadyBookedException exception) {
+  public ResponseEntity<ApiResponse<Void>> handleRoomNotAvailable(RoomAlreadyBookedException exception) {
     return ResponseEntity
             .status(HttpStatus.CONFLICT)
-            .body(exception.getMessage());
+            .body(ApiResponse.failure(exception.getMessage()));
   }
 
   @ExceptionHandler(IllegalStateException.class)
-  public ResponseEntity<?> handleIllegalState(IllegalStateException exception) {
+  public ResponseEntity<ApiResponse<Void>> handleIllegalState(IllegalStateException exception) {
     return ResponseEntity
             .status(HttpStatus.CONFLICT)
-            .body(exception.getMessage());
+            .body(ApiResponse.failure(exception.getMessage()));
   }
 
   @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-  public ResponseEntity<?> handleOptimisticLock(ObjectOptimisticLockingFailureException exception) {
+  public ResponseEntity<ApiResponse<Void>> handleOptimisticLock(
+          ObjectOptimisticLockingFailureException exception) {
     return ResponseEntity
             .status(HttpStatus.CONFLICT)
-            .body("Booking was modified by another request. Refresh and retry.");
+            .body(ApiResponse.failure(
+                    "Booking was modified by another request. Refresh and retry."));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
