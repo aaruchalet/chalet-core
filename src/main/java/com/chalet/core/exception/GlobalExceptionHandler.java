@@ -31,7 +31,14 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(RoomAlreadyBookedException.class)
   public ResponseEntity<?> handleRoomNotAvailable(RoomAlreadyBookedException exception) {
     return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
+            .status(HttpStatus.CONFLICT)
+            .body(exception.getMessage());
+  }
+
+  @ExceptionHandler(IllegalStateException.class)
+  public ResponseEntity<?> handleIllegalState(IllegalStateException exception) {
+    return ResponseEntity
+            .status(HttpStatus.CONFLICT)
             .body(exception.getMessage());
   }
 
@@ -45,7 +52,8 @@ public class GlobalExceptionHandler {
             .collect(Collectors.toMap(
                     FieldError::getField,
                     error -> Optional.ofNullable(error.getDefaultMessage())
-                            .orElse("Validation failed")
+                            .orElse("Validation failed"),
+                    (first, second) -> first
             ));
 
     return ResponseEntity.badRequest()
