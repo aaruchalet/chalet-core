@@ -25,7 +25,10 @@ spec:
 
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: {{ .Values.mysql.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chalet-core.mysqlSecretName" . }}
+                  key: {{ .Values.mysql.auth.rootPasswordKey }}
 
             - name: MYSQL_DATABASE
               value: {{ .Values.mysql.database | quote }}
@@ -33,32 +36,23 @@ spec:
           startupProbe:
             exec:
               command:
-                - mysqladmin
-                - ping
-                - -h
-                - localhost
-                - -uroot
-                - -proot
+                - sh
+                - -c
+                - mysqladmin ping -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" --silent
 
           readinessProbe:
             exec:
               command:
-                - mysqladmin
-                - ping
-                - -h
-                - localhost
-                - -uroot
-                - -proot
+                - sh
+                - -c
+                - mysqladmin ping -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" --silent
 
           livenessProbe:
             exec:
               command:
-                - mysqladmin
-                - ping
-                - -h
-                - localhost
-                - -uroot
-                - -proot
+                - sh
+                - -c
+                - mysqladmin ping -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" --silent
 
           volumeMounts:
             - name: mysql-storage
