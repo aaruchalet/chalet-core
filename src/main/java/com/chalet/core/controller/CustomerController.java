@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -20,15 +21,15 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class CustomerController {
 
-  private CustomerService customerService;
+  private final CustomerService customerService;
 
   @GetMapping
   public ResponseEntity<ApiResponse<?>> findAll() {
     List<CustomerResponse> customerResponseList = customerService.findAll();
-    if (customerResponseList.isEmpty())
+    if (customerResponseList.isEmpty()) {
       return ResponseEntity.ok().body(ApiResponse.success("No Customers Present In Database"));
-    else
-      return ResponseEntity.ok().body(ApiResponse.success(customerResponseList));
+    }
+    return ResponseEntity.ok().body(ApiResponse.success(customerResponseList));
   }
 
   @GetMapping("/{id}")
@@ -36,8 +37,19 @@ public class CustomerController {
     return ResponseEntity.ok().body(ApiResponse.success(customerService.findById(id)));
   }
 
+  @GetMapping("/by-email")
+  public ResponseEntity<ApiResponse<CustomerResponse>> findByEmail(@RequestParam String email) {
+    return ResponseEntity.ok().body(ApiResponse.success(customerService.findByEmail(email)));
+  }
+
+  @GetMapping("/by-phone")
+  public ResponseEntity<ApiResponse<CustomerResponse>> findByPhone(@RequestParam String phone) {
+    return ResponseEntity.ok().body(ApiResponse.success(customerService.findByPhone(phone)));
+  }
+
   @PostMapping
-  public ResponseEntity<ApiResponse<CustomerResponse>> createCustomer(@Valid @RequestBody CustomerRequest request) {
+  public ResponseEntity<ApiResponse<CustomerResponse>> createCustomer(
+          @Valid @RequestBody CustomerRequest request) {
     return ResponseEntity.ok().body(ApiResponse.success(customerService.create(request)));
   }
 }
