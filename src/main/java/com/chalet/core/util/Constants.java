@@ -8,6 +8,10 @@ public class Constants {
   public final static String ROOM_TYPE_ALREADY_EXISTS = "Room type already exists.";
   public static final String ROOM_TYPE_NOT_FOUND = "Room Type with id %d not found.";
 
+  // Room
+  public static final String ROOM_NOT_FOUND = "Room with id %d not found.";
+  public static final String ROOM_NUMBER_ALREADY_EXISTS = "Room number already exists.";
+
   // Customer
   public static final String CUSTOMER_NOT_FOUND = "Customer with id %d not found.";
   public static final String CUSTOMER_EMAIL_ALREADY_EXISTS = "Email already exists.";
