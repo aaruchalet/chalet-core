@@ -21,6 +21,7 @@ public interface BookingMapper {
   @Mapping(target = "room", ignore = true)
   @Mapping(target = "bookingStatus", ignore = true)
   @Mapping(target = "holdExpiry", ignore = true)
+  @Mapping(target = "version", ignore = true)
   DbBooking toEntity(BookingRequest request);
 
   List<DbBooking> toEntity(List<BookingRequest> bookings);
