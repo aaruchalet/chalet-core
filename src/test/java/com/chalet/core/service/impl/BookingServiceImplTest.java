@@ -10,6 +10,7 @@ import com.chalet.core.dto.response.BookingResponse;
 import com.chalet.core.entity.DbBooking;
 import com.chalet.core.enums.BookingStatus;
 import com.chalet.core.exception.ResourceNotFoundException;
+import com.chalet.core.exception.RoomAlreadyBookedException;
 import com.chalet.core.mapper.BookingMapper;
 import com.chalet.core.repository.BookingRepository;
 import com.chalet.core.repository.CustomerRepository;
@@ -108,7 +109,7 @@ class BookingServiceImplTest {
     when(bookingRepository.findById(3L)).thenReturn(Optional.of(booking));
 
     assertThatThrownBy(() -> bookingService.confirmBooking(3L))
-            .isInstanceOf(RuntimeException.class)
+            .isInstanceOf(RoomAlreadyBookedException.class)
             .hasMessage("Booking hold expired.");
   }
 
