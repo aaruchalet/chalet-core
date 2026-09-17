@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.chalet.core.config.BookingProperties;
 import com.chalet.core.dto.response.BookingResponse;
 import com.chalet.core.entity.DbBooking;
 import com.chalet.core.enums.BookingStatus;
@@ -13,8 +14,12 @@ import com.chalet.core.mapper.BookingMapper;
 import com.chalet.core.repository.BookingRepository;
 import com.chalet.core.repository.CustomerRepository;
 import com.chalet.core.repository.RoomRepository;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +29,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceImplTest {
+
+  private static final Instant NOW = Instant.parse("2026-09-17T12:00:00Z");
 
   @Mock
   private BookingRepository bookingRepository;
@@ -41,11 +48,16 @@ class BookingServiceImplTest {
 
   @BeforeEach
   void setUp() {
+    BookingProperties bookingProperties = new BookingProperties();
+    bookingProperties.setHoldDuration(Duration.ofMinutes(10));
+
     bookingService = new BookingServiceImpl(
             bookingRepository,
             bookingMapper,
             roomRepository,
-            customerRepository);
+            customerRepository,
+            bookingProperties,
+            Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   @Test
@@ -73,7 +85,7 @@ class BookingServiceImplTest {
     DbBooking booking = booking(
             2L,
             BookingStatus.HELD,
-            LocalDateTime.now().plusMinutes(5));
+            LocalDateTime.ofInstant(NOW.plusSeconds(300), ZoneOffset.UTC));
     BookingResponse response = response(2L, BookingStatus.CONFIRMED);
 
     when(bookingRepository.findById(2L)).thenReturn(Optional.of(booking));
@@ -88,11 +100,24 @@ class BookingServiceImplTest {
   }
 
   @Test
-  void confirmBookingRejectsNonHeldBooking() {
-    DbBooking booking = booking(3L, BookingStatus.CONFIRMED, null);
+  void confirmBookingRejectsExpiredHoldAtDeterministicClockTime() {
+    DbBooking booking = booking(
+            3L,
+            BookingStatus.HELD,
+            LocalDateTime.ofInstant(NOW.minusSeconds(1), ZoneOffset.UTC));
     when(bookingRepository.findById(3L)).thenReturn(Optional.of(booking));
 
     assertThatThrownBy(() -> bookingService.confirmBooking(3L))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Booking hold expired.");
+  }
+
+  @Test
+  void confirmBookingRejectsNonHeldBooking() {
+    DbBooking booking = booking(4L, BookingStatus.CONFIRMED, null);
+    when(bookingRepository.findById(4L)).thenReturn(Optional.of(booking));
+
+    assertThatThrownBy(() -> bookingService.confirmBooking(4L))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Booking is not on hold.");
   }
@@ -100,12 +125,12 @@ class BookingServiceImplTest {
   @Test
   void cancelBookingTransitionsBookingToCancelled() {
     DbBooking booking = booking(
-            4L,
+            5L,
             BookingStatus.HELD,
-            LocalDateTime.now().plusMinutes(5));
-    when(bookingRepository.findById(4L)).thenReturn(Optional.of(booking));
+            LocalDateTime.ofInstant(NOW.plusSeconds(300), ZoneOffset.UTC));
+    when(bookingRepository.findById(5L)).thenReturn(Optional.of(booking));
 
-    bookingService.cancelBooking(4L);
+    bookingService.cancelBooking(5L);
 
     assertThat(booking.getBookingStatus()).isEqualTo(BookingStatus.CANCELLED);
     assertThat(booking.getHoldExpiry()).isNull();
