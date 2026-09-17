@@ -18,12 +18,16 @@ mysql:
     port: 3306
 
   database: chalet_db
-  username: root
+  username: chalet_app
 
   auth:
     existingSecret: ""
     rootPassword: ""
     rootPasswordKey: mysql-root-password
+
+    appExistingSecret: ""
+    appPassword: ""
+    appPasswordKey: mysql-app-password
 
   storage: 2Gi
 
