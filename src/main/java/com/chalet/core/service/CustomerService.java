@@ -9,9 +9,13 @@ public interface CustomerService {
 
   CustomerResponse findById(Long id);
 
-  CustomerResponse findByPhone(String name);
+  CustomerResponse findByPhone(String phone);
 
   CustomerResponse findByEmail(String email);
 
   CustomerResponse create(CustomerRequest request);
+
+  CustomerResponse update(Long id, CustomerRequest request);
+
+  void delete(Long id);
 }
