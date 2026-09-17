@@ -6,8 +6,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.chalet.core.config.BookingProperties;
+import com.chalet.core.dto.request.BookingRequest;
 import com.chalet.core.dto.response.BookingResponse;
 import com.chalet.core.entity.DbBooking;
+import com.chalet.core.entity.DbCustomer;
+import com.chalet.core.entity.DbRoom;
 import com.chalet.core.enums.BookingStatus;
 import com.chalet.core.exception.ResourceNotFoundException;
 import com.chalet.core.exception.RoomAlreadyBookedException;
@@ -32,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class BookingServiceImplTest {
 
   private static final Instant NOW = Instant.parse("2026-09-17T12:00:00Z");
+  private static final LocalDateTime CURRENT_TIME = LocalDateTime.ofInstant(NOW, ZoneOffset.UTC);
 
   @Mock
   private BookingRepository bookingRepository;
@@ -62,6 +66,47 @@ class BookingServiceImplTest {
   }
 
   @Test
+  void createBookingUsesSameClockTimeForAvailabilityAndHoldExpiry() {
+    BookingRequest request = new BookingRequest();
+    request.setCustomerId(10L);
+    request.setRoomTypeId(20L);
+    request.setCheckInDate(LocalDate.of(2026, 10, 1));
+    request.setCheckOutDate(LocalDate.of(2026, 10, 2));
+
+    DbCustomer customer = new DbCustomer();
+    customer.setId(10L);
+
+    DbRoom room = new DbRoom();
+    room.setId(30L);
+
+    DbBooking booking = new DbBooking();
+    BookingResponse response = response(40L, BookingStatus.HELD);
+
+    when(customerRepository.findById(10L)).thenReturn(Optional.of(customer));
+    when(roomRepository.findAvailableRoomForBooking(
+            20L,
+            LocalDate.of(2026, 10, 1),
+            LocalDate.of(2026, 10, 2),
+            CURRENT_TIME)).thenReturn(Optional.of(room));
+    when(bookingMapper.toEntity(request)).thenReturn(booking);
+    when(bookingRepository.save(booking)).thenReturn(booking);
+    when(bookingMapper.toDto(booking)).thenReturn(response);
+
+    BookingResponse result = bookingService.createBooking(request);
+
+    assertThat(result).isEqualTo(response);
+    assertThat(booking.getCustomer()).isSameAs(customer);
+    assertThat(booking.getRoom()).isSameAs(room);
+    assertThat(booking.getBookingStatus()).isEqualTo(BookingStatus.HELD);
+    assertThat(booking.getHoldExpiry()).isEqualTo(CURRENT_TIME.plusMinutes(10));
+    verify(roomRepository).findAvailableRoomForBooking(
+            20L,
+            LocalDate.of(2026, 10, 1),
+            LocalDate.of(2026, 10, 2),
+            CURRENT_TIME);
+  }
+
+  @Test
   void getBookingByIdReturnsMappedBooking() {
     DbBooking booking = booking(1L, BookingStatus.CONFIRMED, null);
     BookingResponse response = response(1L, BookingStatus.CONFIRMED);
@@ -86,7 +131,7 @@ class BookingServiceImplTest {
     DbBooking booking = booking(
             2L,
             BookingStatus.HELD,
-            LocalDateTime.ofInstant(NOW.plusSeconds(300), ZoneOffset.UTC));
+            CURRENT_TIME.plusMinutes(5));
     BookingResponse response = response(2L, BookingStatus.CONFIRMED);
 
     when(bookingRepository.findById(2L)).thenReturn(Optional.of(booking));
@@ -105,10 +150,20 @@ class BookingServiceImplTest {
     DbBooking booking = booking(
             3L,
             BookingStatus.HELD,
-            LocalDateTime.ofInstant(NOW.minusSeconds(1), ZoneOffset.UTC));
+            CURRENT_TIME.minusSeconds(1));
     when(bookingRepository.findById(3L)).thenReturn(Optional.of(booking));
 
     assertThatThrownBy(() -> bookingService.confirmBooking(3L))
+            .isInstanceOf(RoomAlreadyBookedException.class)
+            .hasMessage("Booking hold expired.");
+  }
+
+  @Test
+  void confirmBookingRejectsHoldExpiringExactlyNow() {
+    DbBooking booking = booking(6L, BookingStatus.HELD, CURRENT_TIME);
+    when(bookingRepository.findById(6L)).thenReturn(Optional.of(booking));
+
+    assertThatThrownBy(() -> bookingService.confirmBooking(6L))
             .isInstanceOf(RoomAlreadyBookedException.class)
             .hasMessage("Booking hold expired.");
   }
@@ -128,7 +183,7 @@ class BookingServiceImplTest {
     DbBooking booking = booking(
             5L,
             BookingStatus.HELD,
-            LocalDateTime.ofInstant(NOW.plusSeconds(300), ZoneOffset.UTC));
+            CURRENT_TIME.plusMinutes(5));
     when(bookingRepository.findById(5L)).thenReturn(Optional.of(booking));
 
     bookingService.cancelBooking(5L);
