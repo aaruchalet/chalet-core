@@ -7,7 +7,7 @@ const state = {
   bookingId: null,
   bookingIds: [],
   guestRooms: [{ adults: 2, childAge: null }],
-  wishlist: [],
+  detailsRoomId: null,
   accountBookings: [],
   holdSeconds: 600,
   holdInterval: null,
@@ -18,9 +18,34 @@ const state = {
 };
 
 const fallbackRooms = [
-  { id: 1, typeName: "Deluxe Chalet", pricePerNight: 6500, type: "chalet", image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85", description: "Spacious and comfortable chalet with stunning mountain views, warm timber interiors and a private-feel retreat.", facts: ["2 Guests", "1 King Bed", "250 sq ft"], amenities: ["Free Wi-Fi", "Breakfast", "Mountain View", "Heater"], popular: true },
-  { id: 2, typeName: "Premium Chalet", pricePerNight: 8900, type: "chalet", image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85", description: "A premium mountain stay with extra space, better views and enhanced comfort for a relaxing escape.", facts: ["2 Guests", "1 King Bed", "300 sq ft"], amenities: ["Free Wi-Fi", "Breakfast", "Balcony", "Heater"] },
-  { id: 3, typeName: "Family Suite", pricePerNight: 14500, type: "suite", image: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=1200&q=85", description: "Ideal for families with a separate living area, beautiful views and generous space for longer stays.", facts: ["4 Guests", "2 Beds", "500 sq ft"], amenities: ["Free Wi-Fi", "Breakfast", "Living Area", "Mountain View"] }
+  {
+    id: 1,
+    typeName: "Pine Haven",
+    pricePerNight: 2000,
+    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85",
+    description: "A warm, uncluttered mountain room for travellers who want comfort, quiet and a restful base in Manali.",
+    facts: ["Up to 3 Guests", "1 Queen Bed", "220 sq ft"],
+    amenities: ["Free Wi-Fi", "Room Heater", "24-hour Hot Water", "Tea & Coffee", "Smart TV", "Daily Housekeeping", "Orchard-side View"]
+  },
+  {
+    id: 2,
+    typeName: "Cedar Retreat",
+    pricePerNight: 2500,
+    image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85",
+    description: "A more spacious cedar-toned retreat with a private balcony and stronger mountain-facing character.",
+    facts: ["Up to 3 Guests", "1 King Bed", "280 sq ft"],
+    amenities: ["Free Wi-Fi", "Breakfast Included", "Private Balcony", "Mountain View", "Room Heater", "24-hour Hot Water", "Tea & Coffee", "Smart TV", "Work Desk", "Premium Toiletries"],
+    popular: true
+  },
+  {
+    id: 3,
+    typeName: "Himalayan Panorama",
+    pricePerNight: 3000,
+    image: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=1200&q=85",
+    description: "Our most generous room, designed around panoramic Himalayan views, extra seating space and a more complete premium stay.",
+    facts: ["Up to 3 Guests", "1 King Bed + Extra Bed", "360 sq ft"],
+    amenities: ["Free Wi-Fi", "Breakfast Included", "Panoramic Mountain View", "Private Balcony", "Lounge Seating", "Room Heater", "24-hour Hot Water", "Tea & Coffee", "Smart TV", "Mini Fridge", "Premium Toiletries", "Bathrobes", "Priority Housekeeping"]
+  }
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -118,7 +143,6 @@ function setAuthUser(user) {
   state.customerId = user?.customerId || null;
   renderAuthState();
   renderProfile();
-  renderWishlist();
   if (!user) {
     $("accountMenu").hidden = true;
     $("signInButton").setAttribute("aria-expanded", "false");
@@ -312,12 +336,15 @@ async function loadRoomTypes() {
   try {
     const response = await api("/api/v1/room-types");
     const backendRooms = Array.isArray(response?.data) ? response.data : [];
-    state.roomTypes = backendRooms.length ? backendRooms.map((room, index) => ({
-      ...fallbackRooms[index % fallbackRooms.length],
-      id: room.id,
-      typeName: room.typeName,
-      pricePerNight: Number(room.pricePerNight)
-    })) : fallbackRooms;
+    state.roomTypes = backendRooms.length ? backendRooms.map((room, index) => {
+      const presentation = fallbackRooms.find((item) => Number(item.id) === Number(room.id))
+        || fallbackRooms[index % fallbackRooms.length];
+      return {
+        ...presentation,
+        id: room.id,
+        pricePerNight: Number(room.pricePerNight)
+      };
+    }) : fallbackRooms;
   } catch {
     state.roomTypes = fallbackRooms;
     toast("Showing design sample rooms. Start Chalet Core APIs to load live room types.");
@@ -327,8 +354,7 @@ async function loadRoomTypes() {
 
 function renderRooms() {
   const maxPrice = Number($("priceRange").value);
-  const checkedTypes = [...document.querySelectorAll(".type-filter:checked")].map((el) => el.value);
-  let rooms = state.roomTypes.filter((room) => Number(room.pricePerNight) <= maxPrice && checkedTypes.includes(room.type || "chalet"));
+  let rooms = state.roomTypes.filter((room) => Number(room.pricePerNight) <= maxPrice);
 
   const sort = $("sortSelect").value;
   if (sort === "price-low") rooms.sort((a, b) => a.pricePerNight - b.pricePerNight);
@@ -342,9 +368,8 @@ function renderRooms() {
   $("roomList").innerHTML = rooms.map((room, index) => `
     <article class="stay-card ${state.selectedRoom?.id === room.id ? "selected" : ""}" data-id="${room.id}">
       <div class="stay-image" style="background-image:url('${room.image}')">
-        ${room.popular ? '<span class="popular-badge">♛ Most Popular</span>' : ""}
-        <button class="save-stay-button ${isSaved(room.id) ? "saved" : ""}" type="button" data-save-room="${room.id}" aria-label="${isSaved(room.id) ? "Remove from saved stays" : "Save stay"}">${isSaved(room.id) ? "♥" : "♡"}</button>
-        <span class="image-count">1 / 8</span>
+        ${room.popular ? '<span class="popular-badge">♛ Guest Favourite</span>' : ""}
+        ${state.selectedRoom?.id === room.id ? '<span class="selected-badge">Selected</span>' : ""}
       </div>
       <div class="stay-body">
         <h3>${escapeHtml(room.typeName)}</h3>
@@ -355,26 +380,48 @@ function renderRooms() {
       <div class="stay-price">
         <strong>${formatMoney(room.pricePerNight)}</strong>
         <small>per night</small>
-        <button class="select-stay-button ${state.selectedRoom?.id === room.id ? "selected" : ""}" type="button" data-select-room="${room.id}">
-          ${state.selectedRoom?.id === room.id ? "Selected" : "View Details"}
+        <button class="select-stay-button ${state.selectedRoom?.id === room.id ? "selected" : ""}" type="button" data-room-details="${room.id}">
+          ${state.selectedRoom?.id === room.id ? "Selected · View details" : "View details"}
         </button>
       </div>
     </article>
   `).join("");
 
-  document.querySelectorAll("[data-select-room]").forEach((button) => {
-    button.addEventListener("click", () => selectRoom(Number(button.dataset.selectRoom)));
-  });
-  document.querySelectorAll("[data-save-room]").forEach((button) => {
-    button.addEventListener("click", () => toggleWishlist(Number(button.dataset.saveRoom)));
+  document.querySelectorAll("[data-room-details]").forEach((button) => {
+    button.addEventListener("click", () => openRoomDetails(Number(button.dataset.roomDetails)));
   });
 }
 
 function selectRoom(id) {
-  state.selectedRoom = state.roomTypes.find((room) => room.id === id) || null;
+  state.selectedRoom = state.roomTypes.find((room) => Number(room.id) === Number(id)) || null;
   state.selectedImage = state.selectedRoom?.image || null;
   renderRooms();
   updateSummary();
+}
+
+function openRoomDetails(id) {
+  const room = state.roomTypes.find((item) => Number(item.id) === Number(id));
+  if (!room) return;
+
+  state.detailsRoomId = Number(room.id);
+  $("roomDetailsTitle").textContent = room.typeName;
+  $("roomDetailsDescription").textContent = room.description;
+  $("roomDetailsRate").textContent = formatMoney(room.pricePerNight);
+  $("roomDetailsImage").style.backgroundImage = `url('${room.image}')`;
+  $("roomDetailFacts").innerHTML = room.facts.map((fact) => `<div><span>◇</span><strong>${escapeHtml(fact)}</strong></div>`).join("");
+  $("roomDetailsAmenities").innerHTML = room.amenities.map((item) => `<span><b>✓</b> ${escapeHtml(item)}</span>`).join("");
+
+  const alreadySelected = Number(state.selectedRoom?.id) === Number(room.id);
+  $("roomDetailsSelect").textContent = alreadySelected ? "Selected room" : "Select this room";
+  $("roomDetailsSelect").disabled = alreadySelected;
+  $("roomDetailsModal").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeRoomDetails() {
+  $("roomDetailsModal").hidden = true;
+  state.detailsRoomId = null;
+  document.body.style.overflow = "";
 }
 
 function numberOfNights() {
@@ -731,46 +778,6 @@ function initGuestSelector() {
   });
 }
 
-function wishlistStorageKey() {
-  return `aaru-wishlist-${state.authUser?.accountId || "guest"}`;
-}
-
-function loadWishlist() {
-  try { state.wishlist = JSON.parse(localStorage.getItem(wishlistStorageKey()) || "[]"); }
-  catch { state.wishlist = []; }
-}
-
-function isSaved(roomId) {
-  return state.wishlist.includes(Number(roomId));
-}
-
-function toggleWishlist(roomId) {
-  const id = Number(roomId);
-  if (isSaved(id)) state.wishlist = state.wishlist.filter((value) => value !== id);
-  else state.wishlist.push(id);
-  localStorage.setItem(wishlistStorageKey(), JSON.stringify(state.wishlist));
-  renderRooms();
-  renderWishlist();
-  toast(isSaved(id) ? "Stay saved to your wishlist." : "Stay removed from your wishlist.");
-}
-
-function renderWishlist() {
-  if (!$("wishlistList")) return;
-  loadWishlist();
-  const rooms = state.wishlist.map((id) => state.roomTypes.find((room) => Number(room.id) === Number(id))).filter(Boolean);
-  if (!rooms.length) {
-    $("wishlistList").innerHTML = '<div class="account-empty">No saved stays yet. Use the heart on any Chalet or Suite to save it.</div>';
-    return;
-  }
-  $("wishlistList").innerHTML = rooms.map((room) => `
-    <article class="wishlist-card">
-      <div class="wishlist-thumb" style="background-image:url('${room.image}')"></div>
-      <div><strong>${escapeHtml(room.typeName)}</strong><small>${formatMoney(room.pricePerNight)} per night</small></div>
-      <button type="button" data-remove-wishlist="${room.id}">Remove</button>
-    </article>`).join("");
-  document.querySelectorAll("[data-remove-wishlist]").forEach((button) => button.addEventListener("click", () => toggleWishlist(Number(button.dataset.removeWishlist))));
-}
-
 function renderProfile() {
   if (!$("profileDetails")) return;
   const user = state.authUser;
@@ -842,7 +849,6 @@ function openAccount(view = "profile") {
   $("accountModal").hidden = false;
   document.body.style.overflow = "hidden";
   renderProfile();
-  renderWishlist();
   if (view === "bookings" || view === "payments") loadMemberBookings();
 }
 
@@ -947,11 +953,19 @@ document.addEventListener("click", () => {
 });
 $("accountMenu").addEventListener("click", (event) => event.stopPropagation());
 document.querySelectorAll("[data-account-view]").forEach((button) => button.addEventListener("click", () => openAccount(button.dataset.accountView)));
-$("savedStaysButton").addEventListener("click", () => openAccount("wishlist"));
 document.querySelectorAll("[data-account-tab]").forEach((button) => button.addEventListener("click", () => openAccount(button.dataset.accountTab)));
 $("accountModalClose").addEventListener("click", closeAccount);
 $("accountModal").addEventListener("click", (event) => { if (event.target === $("accountModal")) closeAccount(); });
 $("refreshBookingsButton").addEventListener("click", loadMemberBookings);
+$("roomDetailsClose").addEventListener("click", closeRoomDetails);
+$("roomDetailsModal").addEventListener("click", (event) => { if (event.target === $("roomDetailsModal")) closeRoomDetails(); });
+$("roomDetailsSelect").addEventListener("click", () => {
+  if (state.detailsRoomId === null) return;
+  const roomId = state.detailsRoomId;
+  closeRoomDetails();
+  selectRoom(roomId);
+  toast("Room selected.");
+});
 $("shareExperienceButton").addEventListener("click", openExperienceModal);
 $("experienceModalClose").addEventListener("click", closeExperienceModal);
 $("experienceModal").addEventListener("click", (event) => { if (event.target === $("experienceModal")) closeExperienceModal(); });
@@ -985,12 +999,10 @@ $("priceRange").addEventListener("input", () => {
   renderRooms();
 });
 $("sortSelect").addEventListener("change", renderRooms);
-document.querySelectorAll(".type-filter").forEach((input) => input.addEventListener("change", renderRooms));
 
 $("clearFilters").addEventListener("click", () => {
   $("priceRange").value = 50000;
   $("priceRangeValue").textContent = "₹50,000+";
-  document.querySelectorAll(".type-filter").forEach((input) => input.checked = true);
   $("sortSelect").value = "recommended";
   renderRooms();
 });
@@ -1049,13 +1061,8 @@ $("confirmButton").addEventListener("click", confirmBooking);
 $("cancelButton").addEventListener("click", cancelBooking);
 
 defaultDates();
-initAuthentication().then(() => {
-  loadWishlist();
-  renderWishlist();
-});
+initAuthentication();
 loadRoomTypes().then(() => {
   if (state.roomTypes.length) selectRoom(state.roomTypes[0].id);
-  loadWishlist();
-  renderWishlist();
   updateSummary();
 });
