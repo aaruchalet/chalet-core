@@ -1,6 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:2211/chalet_db
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:2211/chalet_db}
+    username: ${SPRING_DATASOURCE_USERNAME:chalet_app}
+    password: ${SPRING_DATASOURCE_PASSWORD:chalet_app_dev}
 
   jpa:
     show-sql: true
