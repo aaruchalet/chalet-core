@@ -90,7 +90,8 @@ public class AuthController {
   public ResponseEntity<ApiResponse<AuthResponse>> me(HttpSession session) {
     Object accountId = session.getAttribute(AUTH_SESSION_KEY);
     if (!(accountId instanceof Long id)) {
-      return ResponseEntity.ok(ApiResponse.success("Not signed in."));
+      return ResponseEntity.ok(
+              new ApiResponse<AuthResponse>(true, "Not signed in.", null, null));
     }
     return ResponseEntity.ok(ApiResponse.success(authService.findById(id)));
   }
