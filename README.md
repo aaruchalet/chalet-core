@@ -8,7 +8,8 @@ A Spring Boot backend for a resort-management system, built with Java 21, MySQL,
 - Room and room-type management
 - Booking lifecycle management
 - Member sign-up/sign-in with password or OTP
-- Optional Google OAuth sign-in
+- 500 welcome points (₹500 booking value) on first member signup
+- Google OAuth UI reserved but currently disabled
 - Flyway database migrations
 - Spring Boot Actuator health checks
 - Docker support
@@ -147,26 +148,15 @@ Supported flows:
 
 - Email or phone + password
 - Email or phone + 6-digit OTP
-- Google OAuth 2.0 when Google credentials are configured
+- Google sign-in button is intentionally disabled for now
 - Session-based sign-in state
 - Normal sign-up creates/links a `customer` record so the signed-in member can book directly
 
-For local development, OTPs are returned by the API and logged so the flow can be tested without an SMS/email provider. Production OTP delivery still requires an external email/SMS provider.
+For local development, OTPs are returned by the API and logged so the flow can be tested without an SMS/email provider. OTP requests only proceed for an existing Aaru’s Chalet member account; unknown email/phone details are directed to sign up first. Production OTP delivery still requires an external email/SMS provider.
 
-To enable Google sign-in, configure a Google OAuth web client and set:
+New local/password signups receive 500 persisted membership points, shown as ₹500 of booking value. Redemption against checkout/payment is a separate booking/payment capability and is not yet applied automatically.
 
-```bash
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID='<google-client-id>'
-export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET='<google-client-secret>'
-```
-
-Use this authorized redirect URI in the Google OAuth client:
-
-```text
-http://localhost:8080/login/oauth2/code/google
-```
-
-If the application runs on another port, use that port in the redirect URI.
+Google sign-in is intentionally disabled in the UI for now.
 
 ## Docker
 
