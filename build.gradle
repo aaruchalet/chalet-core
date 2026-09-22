@@ -77,3 +77,17 @@ tasks.named('jacocoTestReport') {
         csv.required = false
     }
 }
+
+
+tasks.register('bootRunDev', org.springframework.boot.gradle.tasks.run.BootRun) {
+    group = 'application'
+    description = 'Run Chalet Core locally with deterministic development datasource settings.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.chalet.core.ChaletCoreApplication'
+    args = [
+        '--spring.profiles.active=dev',
+        '--spring.datasource.url=jdbc:mysql://localhost:2211/chalet_db',
+        '--spring.datasource.username=chalet_app',
+        '--spring.datasource.password=chalet_app_dev'
+    ]
+}
