@@ -32,14 +32,12 @@
 
     <div class="header-actions">
       <button class="currency-button" type="button">INR ₹ <span>⌄</span></button>
-      <button class="icon-button" id="savedStaysButton" type="button" aria-label="Saved stays">♡</button>
       <div class="account-control">
         <button class="sign-in-button" id="signInButton" type="button" aria-haspopup="menu" aria-expanded="false"><span aria-hidden="true">♙</span> <span id="signInLabel">Sign in</span></button>
         <div class="account-menu" id="accountMenu" role="menu" hidden>
           <button type="button" role="menuitem" data-account-view="profile">Profile</button>
-          <button type="button" role="menuitem" data-account-view="bookings">Bookings / Orders</button>
+          <button type="button" role="menuitem" data-account-view="bookings">Bookings & Orders</button>
           <button type="button" role="menuitem" data-account-view="payments">Payments</button>
-          <button type="button" role="menuitem" data-account-view="wishlist">Saved / Wishlist</button>
           <button class="account-menu-signout" id="headerLogoutButton" type="button" role="menuitem">Sign out</button>
         </div>
       </div>
@@ -152,20 +150,9 @@
             <div class="range-labels"><span>₹1,000</span><span id="priceRangeValue">₹50,000+</span></div>
           </div>
 
-          <div class="filter-group">
-            <h4>Property Type</h4>
-            <label><input class="type-filter" type="checkbox" value="chalet" checked> Chalet</label>
-            <label><input class="type-filter" type="checkbox" value="suite" checked> Suite</label>
-          </div>
-
-          <div class="filter-group">
-            <h4>Amenities</h4>
-            <label><input type="checkbox" checked disabled> Free Wi-Fi</label>
-            <label><input type="checkbox" checked disabled> Breakfast Included</label>
-            <label><input type="checkbox" checked disabled> Mountain View</label>
-            <label><input type="checkbox" disabled> Balcony</label>
-            <label><input type="checkbox" disabled> Heater</label>
-            <label><input type="checkbox" disabled> Parking</label>
+          <div class="filter-group room-guide">
+            <h4>What changes by room</h4>
+            <p>Each room category has its own size, bed setup, view and amenity package. Open room details to compare everything before selecting.</p>
           </div>
         </aside>
 
@@ -409,20 +396,47 @@
     </section>
   </div>
 
+  <div class="modal-backdrop" id="roomDetailsModal" hidden>
+    <section class="room-details-modal" role="dialog" aria-modal="true" aria-labelledby="roomDetailsTitle">
+      <button class="modal-close" id="roomDetailsClose" type="button" aria-label="Close">×</button>
+      <div class="room-details-image" id="roomDetailsImage"></div>
+      <div class="room-details-content">
+        <div class="room-details-heading">
+          <div>
+            <p class="modal-kicker">Aaru’s Chalet room</p>
+            <h2 id="roomDetailsTitle">Room details</h2>
+            <p id="roomDetailsDescription"></p>
+          </div>
+          <div class="room-details-rate">
+            <strong id="roomDetailsRate">—</strong>
+            <small>per night</small>
+          </div>
+        </div>
+        <div class="room-detail-facts" id="roomDetailFacts"></div>
+        <div class="room-amenities-block">
+          <h3>Included amenities</h3>
+          <div class="room-amenities-grid" id="roomDetailsAmenities"></div>
+        </div>
+        <div class="room-details-actions">
+          <button class="room-details-select" id="roomDetailsSelect" type="button">Select this room</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <div class="modal-backdrop" id="accountModal" hidden>
     <section class="account-modal" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
       <button class="modal-close" id="accountModalClose" type="button" aria-label="Close">×</button>
       <div class="account-modal-head">
         <p class="modal-kicker">Aaru’s Chalet account</p>
         <h2 id="accountModalTitle">My account</h2>
-        <p id="accountWelcome">Manage your profile, bookings, payments and saved stays.</p>
+        <p id="accountWelcome">Manage your profile, bookings and payments.</p>
       </div>
       <div class="account-layout">
         <nav class="account-tabs" aria-label="Account sections">
           <button class="active" type="button" data-account-tab="profile">Profile</button>
-          <button type="button" data-account-tab="bookings">Bookings / Orders</button>
+          <button type="button" data-account-tab="bookings">Bookings & Orders</button>
           <button type="button" data-account-tab="payments">Payments</button>
-          <button type="button" data-account-tab="wishlist">Saved / Wishlist</button>
         </nav>
         <div class="account-content">
           <section class="account-pane" data-account-pane="profile">
@@ -430,16 +444,12 @@
             <div class="profile-grid" id="profileDetails"></div>
           </section>
           <section class="account-pane" data-account-pane="bookings" hidden>
-            <div class="account-pane-heading"><div><h3>Bookings / Orders</h3><p>Your reservations from Chalet Core.</p></div><button id="refreshBookingsButton" type="button">Refresh</button></div>
+            <div class="account-pane-heading"><div><h3>Bookings & Orders</h3><p>Your reservations from Chalet Core.</p></div><button id="refreshBookingsButton" type="button">Refresh</button></div>
             <div id="memberBookings" class="account-list"><div class="account-empty">Loading bookings…</div></div>
           </section>
           <section class="account-pane" data-account-pane="payments" hidden>
             <h3>Payments</h3>
             <div id="memberPayments" class="account-list"></div>
-          </section>
-          <section class="account-pane" data-account-pane="wishlist" hidden>
-            <h3>Saved / Wishlist</h3>
-            <div id="wishlistList" class="wishlist-list"></div>
           </section>
         </div>
       </div>
