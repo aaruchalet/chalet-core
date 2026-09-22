@@ -36,6 +36,9 @@ public class BookingRequest {
   @NotNull
   private MealPlan mealPlan = MealPlan.ROOM_ONLY;
 
+  @Min(value = 0, message = "Reward points to redeem cannot be negative")
+  private int rewardPointsToRedeem;
+
   @AssertTrue(message = "Room occupancy is limited to 3 people: up to 3 adults, or 2 adults plus 1 child")
   public boolean isOccupancyValid() {
     if (childAge == null) {

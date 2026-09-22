@@ -22,6 +22,7 @@ public interface BookingMapper {
   @Mapping(target = "bookingStatus", ignore = true)
   @Mapping(target = "holdExpiry", ignore = true)
   @Mapping(target = "version", ignore = true)
+  @Mapping(target = "rewardPointsRedeemed", source = "rewardPointsToRedeem")
   DbBooking toEntity(BookingRequest request);
 
   List<DbBooking> toEntity(List<BookingRequest> bookings);

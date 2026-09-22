@@ -82,6 +82,9 @@ public class DbBooking {
   @Column(name = "meal_plan", nullable = false)
   private MealPlan mealPlan = MealPlan.ROOM_ONLY;
 
+  @Column(name = "reward_points_redeemed", nullable = false)
+  private int rewardPointsRedeemed;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "booking_status", nullable = false)
   private BookingStatus bookingStatus;

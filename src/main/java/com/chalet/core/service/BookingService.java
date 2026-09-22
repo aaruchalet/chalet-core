@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface BookingService {
 
-  BookingResponse createBooking(BookingRequest request);
+  BookingResponse createBooking(BookingRequest request, Long authenticatedAccountId);
 
-  BookingResponse confirmBooking(Long bookingId);
+  BookingResponse confirmBooking(Long bookingId, Long authenticatedAccountId);
 
   void cancelBooking(Long bookingId);
 

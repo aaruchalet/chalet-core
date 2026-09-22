@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.chalet.core.config.BookingProperties;
 import com.chalet.core.dto.request.BookingRequest;
 import com.chalet.core.dto.response.BookingResponse;
+import com.chalet.core.entity.DbAuthAccount;
 import com.chalet.core.entity.DbBooking;
 import com.chalet.core.entity.DbCustomer;
 import com.chalet.core.entity.DbRoom;
@@ -16,6 +17,7 @@ import com.chalet.core.enums.MealPlan;
 import com.chalet.core.exception.ResourceNotFoundException;
 import com.chalet.core.exception.RoomAlreadyBookedException;
 import com.chalet.core.mapper.BookingMapper;
+import com.chalet.core.repository.AuthAccountRepository;
 import com.chalet.core.repository.BookingRepository;
 import com.chalet.core.repository.CustomerRepository;
 import com.chalet.core.repository.RoomRepository;
@@ -45,6 +47,9 @@ class BookingServiceImplTest {
   private BookingMapper bookingMapper;
 
   @Mock
+  private AuthAccountRepository authAccountRepository;
+
+  @Mock
   private RoomRepository roomRepository;
 
   @Mock
@@ -60,6 +65,7 @@ class BookingServiceImplTest {
     bookingService = new BookingServiceImpl(
             bookingRepository,
             bookingMapper,
+            authAccountRepository,
             roomRepository,
             customerRepository,
             bookingProperties,
@@ -93,7 +99,7 @@ class BookingServiceImplTest {
     when(bookingRepository.save(booking)).thenReturn(booking);
     when(bookingMapper.toDto(booking)).thenReturn(response);
 
-    BookingResponse result = bookingService.createBooking(request);
+    BookingResponse result = bookingService.createBooking(request, null);
 
     assertThat(result).isEqualTo(response);
     assertThat(booking.getCustomer()).isSameAs(customer);
@@ -138,12 +144,43 @@ class BookingServiceImplTest {
     when(bookingRepository.findById(2L)).thenReturn(Optional.of(booking));
     when(bookingMapper.toDto(booking)).thenReturn(response);
 
-    BookingResponse result = bookingService.confirmBooking(2L);
+    BookingResponse result = bookingService.confirmBooking(2L, null);
 
     assertThat(booking.getBookingStatus()).isEqualTo(BookingStatus.CONFIRMED);
     assertThat(booking.getHoldExpiry()).isNull();
     assertThat(result).isEqualTo(response);
     verify(bookingMapper).toDto(booking);
+  }
+
+  @Test
+  void confirmBookingRedeemsMemberPoints() {
+    DbCustomer customer = new DbCustomer();
+    customer.setId(10L);
+
+    DbBooking booking = booking(
+            7L,
+            BookingStatus.HELD,
+            CURRENT_TIME.plusMinutes(5));
+    booking.setCustomer(customer);
+    booking.setRewardPointsRedeemed(300);
+
+    DbAuthAccount account = new DbAuthAccount();
+    account.setId(77L);
+    account.setCustomerId(10L);
+    account.setEnabled(true);
+    account.setRewardPoints(500);
+
+    BookingResponse response = response(7L, BookingStatus.CONFIRMED, 300);
+
+    when(bookingRepository.findById(7L)).thenReturn(Optional.of(booking));
+    when(authAccountRepository.findByIdForUpdate(77L)).thenReturn(Optional.of(account));
+    when(bookingMapper.toDto(booking)).thenReturn(response);
+
+    BookingResponse result = bookingService.confirmBooking(7L, 77L);
+
+    assertThat(account.getRewardPoints()).isEqualTo(200);
+    assertThat(result.rewardPointsRedeemed()).isEqualTo(300);
+    verify(authAccountRepository).save(account);
   }
 
   @Test
@@ -154,7 +191,7 @@ class BookingServiceImplTest {
             CURRENT_TIME.minusSeconds(1));
     when(bookingRepository.findById(3L)).thenReturn(Optional.of(booking));
 
-    assertThatThrownBy(() -> bookingService.confirmBooking(3L))
+    assertThatThrownBy(() -> bookingService.confirmBooking(3L, null))
             .isInstanceOf(RoomAlreadyBookedException.class)
             .hasMessage("Booking hold expired.");
   }
@@ -164,7 +201,7 @@ class BookingServiceImplTest {
     DbBooking booking = booking(6L, BookingStatus.HELD, CURRENT_TIME);
     when(bookingRepository.findById(6L)).thenReturn(Optional.of(booking));
 
-    assertThatThrownBy(() -> bookingService.confirmBooking(6L))
+    assertThatThrownBy(() -> bookingService.confirmBooking(6L, null))
             .isInstanceOf(RoomAlreadyBookedException.class)
             .hasMessage("Booking hold expired.");
   }
@@ -174,7 +211,7 @@ class BookingServiceImplTest {
     DbBooking booking = booking(4L, BookingStatus.CONFIRMED, null);
     when(bookingRepository.findById(4L)).thenReturn(Optional.of(booking));
 
-    assertThatThrownBy(() -> bookingService.confirmBooking(4L))
+    assertThatThrownBy(() -> bookingService.confirmBooking(4L, null))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Booking is not on hold.");
   }
@@ -204,6 +241,10 @@ class BookingServiceImplTest {
   }
 
   private BookingResponse response(Long id, BookingStatus status) {
+    return response(id, status, 0);
+  }
+
+  private BookingResponse response(Long id, BookingStatus status, int rewardPointsRedeemed) {
     return new BookingResponse(
             id,
             10L,
@@ -213,6 +254,7 @@ class BookingServiceImplTest {
             2,
             null,
             MealPlan.ROOM_ONLY,
+            rewardPointsRedeemed,
             status);
   }
 }
