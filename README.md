@@ -65,10 +65,54 @@ The HTML report is generated under:
 build/reports/jacoco/test/html/
 ```
 
-## Run locally
+## Local development prerequisites
+
+Before running Chalet Core locally, make sure you have:
+
+- Java 21
+- Docker with Docker Compose
+- Port `2211` available for MySQL
+- Port `8080` available for Spring Boot
+
+Start the local MySQL database:
 
 ```bash
-./gradlew bootRun
+make mysql-up
+```
+
+The development profile uses these defaults automatically:
+
+```text
+Database: chalet_db
+Host: localhost
+Port: 2211
+Username: chalet_app
+Password: chalet_app_dev
+JDBC URL: jdbc:mysql://localhost:2211/chalet_db
+```
+
+You do not need to export datasource variables for normal local development. If needed, they can still be overridden with:
+
+```bash
+export SPRING_DATASOURCE_URL='jdbc:mysql://localhost:2211/chalet_db'
+export SPRING_DATASOURCE_USERNAME='chalet_app'
+export SPRING_DATASOURCE_PASSWORD='chalet_app_dev'
+```
+
+The datasource URL must be a valid JDBC URL and must start with `jdbc:mysql://`.
+
+## Run locally
+
+Run the application with the development profile:
+
+```bash
+make run-dev
+```
+
+Equivalent Gradle command:
+
+```bash
+./gradlew bootRun --args='--spring.profiles.active=dev'
 ```
 
 Application:
@@ -77,10 +121,23 @@ Application:
 http://localhost:8080
 ```
 
+Aaru's Chalet booking UI:
+
+```text
+http://localhost:8080/
+```
+
 Health endpoint:
 
 ```text
 http://localhost:8080/actuator/health
+```
+
+For a full local startup from a clean terminal:
+
+```bash
+make mysql-up
+make run-dev
 ```
 
 ## Docker
