@@ -2,6 +2,9 @@ spring:
   application:
     name: chalet-core
 
+  profiles:
+    default: dev
+
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
