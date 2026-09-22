@@ -8,6 +8,8 @@ const state = {
   bookingIds: [],
   guestRooms: [{ adults: 2, childAge: null }],
   detailsRoomId: null,
+  mealPlan: "ROOM_ONLY",
+  pendingMealPlan: "ROOM_ONLY",
   accountBookings: [],
   holdSeconds: 600,
   holdInterval: null,
@@ -34,7 +36,7 @@ const fallbackRooms = [
     image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85",
     description: "A more spacious cedar-toned retreat with a private balcony and stronger mountain-facing character.",
     facts: ["Up to 3 Guests", "1 King Bed", "280 sq ft"],
-    amenities: ["Free Wi-Fi", "Breakfast Included", "Private Balcony", "Mountain View", "Room Heater", "24-hour Hot Water", "Tea & Coffee", "Smart TV", "Work Desk", "Premium Toiletries"],
+    amenities: ["Free Wi-Fi", "Private Balcony", "Mountain View", "Room Heater", "24-hour Hot Water", "Tea & Coffee", "Smart TV", "Work Desk", "Premium Toiletries"],
     popular: true
   },
   {
@@ -44,9 +46,17 @@ const fallbackRooms = [
     image: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=1200&q=85",
     description: "Our most generous room, designed around panoramic Himalayan views, extra seating space and a more complete premium stay.",
     facts: ["Up to 3 Guests", "1 King Bed + Extra Bed", "360 sq ft"],
-    amenities: ["Free Wi-Fi", "Breakfast Included", "Panoramic Mountain View", "Private Balcony", "Lounge Seating", "Room Heater", "24-hour Hot Water", "Tea & Coffee", "Smart TV", "Mini Fridge", "Premium Toiletries", "Bathrobes", "Priority Housekeeping"]
+    amenities: ["Free Wi-Fi", "Panoramic Mountain View", "Private Balcony", "Lounge Seating", "Room Heater", "24-hour Hot Water", "Tea & Coffee", "Smart TV", "Mini Fridge", "Premium Toiletries", "Bathrobes", "Priority Housekeeping"]
   }
 ];
+
+const BREAKFAST_PRICE_PER_PERSON = 350;
+const MEAL_PLANS = {
+  ROOM_ONLY: { label: "Room only", breakfast: false, dinner: false },
+  BREAKFAST_ONLY: { label: "Breakfast only", breakfast: true, dinner: false },
+  DINNER_ONLY: { label: "Dinner only", breakfast: false, dinner: true },
+  BREAKFAST_DINNER: { label: "Breakfast + dinner", breakfast: true, dinner: true }
+};
 
 const $ = (id) => document.getElementById(id);
 const formatMoney = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -380,9 +390,12 @@ function renderRooms() {
       <div class="stay-price">
         <strong>${formatMoney(room.pricePerNight)}</strong>
         <small>per night</small>
-        <button class="select-stay-button ${state.selectedRoom?.id === room.id ? "selected" : ""}" type="button" data-room-details="${room.id}">
-          ${state.selectedRoom?.id === room.id ? "Selected · View details" : "View details"}
-        </button>
+        <div class="room-card-actions">
+          <button class="view-details-button" type="button" data-room-details="${room.id}">View details</button>
+          <button class="select-stay-button ${state.selectedRoom?.id === room.id ? "selected" : ""}" type="button" data-select-room="${room.id}">
+            ${state.selectedRoom?.id === room.id ? "Selected" : "Select room"}
+          </button>
+        </div>
       </div>
     </article>
   `).join("");
@@ -390,11 +403,19 @@ function renderRooms() {
   document.querySelectorAll("[data-room-details]").forEach((button) => {
     button.addEventListener("click", () => openRoomDetails(Number(button.dataset.roomDetails)));
   });
+  document.querySelectorAll("[data-select-room]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectRoom(Number(button.dataset.selectRoom), "ROOM_ONLY");
+      toast("Room selected with Room only rate.");
+    });
+  });
 }
 
-function selectRoom(id) {
+function selectRoom(id, mealPlan = "ROOM_ONLY") {
   state.selectedRoom = state.roomTypes.find((room) => Number(room.id) === Number(id)) || null;
   state.selectedImage = state.selectedRoom?.image || null;
+  state.mealPlan = MEAL_PLANS[mealPlan] ? mealPlan : "ROOM_ONLY";
+  state.pendingMealPlan = state.mealPlan;
   renderRooms();
   updateSummary();
 }
@@ -412,8 +433,12 @@ function openRoomDetails(id) {
   $("roomDetailsAmenities").innerHTML = room.amenities.map((item) => `<span><b>✓</b> ${escapeHtml(item)}</span>`).join("");
 
   const alreadySelected = Number(state.selectedRoom?.id) === Number(room.id);
-  $("roomDetailsSelect").textContent = alreadySelected ? "Selected room" : "Select this room";
-  $("roomDetailsSelect").disabled = alreadySelected;
+  state.pendingMealPlan = alreadySelected ? state.mealPlan : "ROOM_ONLY";
+  document.querySelectorAll('input[name="mealPlan"]').forEach((input) => {
+    input.checked = input.value === state.pendingMealPlan;
+  });
+  $("roomDetailsSelect").textContent = alreadySelected ? "Update room & meal plan" : "Select this room";
+  $("roomDetailsSelect").disabled = false;
   $("roomDetailsModal").hidden = false;
   document.body.style.overflow = "hidden";
 }
@@ -456,9 +481,23 @@ function childSupplementPerNight() {
   if (!state.selectedRoom) return 0;
   const eligibleChildren = state.guestRooms.filter((entry) => {
     const age = Number(entry.childAge);
-    return entry.childAge !== null && entry.childAge !== "" && age >= 2 && age < 12;
+    return entry.childAge !== null && entry.childAge !== "" && age >= 4 && age < 12;
   }).length;
   return eligibleChildren * Number(state.selectedRoom.pricePerNight) * 0.5;
+}
+
+function totalPeople() {
+  return state.guestRooms.reduce((total, entry) => total
+    + Number(entry.adults || 0)
+    + (entry.childAge !== null && entry.childAge !== "" ? 1 : 0), 0);
+}
+
+function selectedMealPlan() {
+  return MEAL_PLANS[state.mealPlan] || MEAL_PLANS.ROOM_ONLY;
+}
+
+function breakfastChargePerNight() {
+  return selectedMealPlan().breakfast ? totalPeople() * BREAKFAST_PRICE_PER_PERSON : 0;
 }
 
 function validateOccupancy() {
@@ -496,6 +535,9 @@ function updateSummary() {
     $("summaryRate").textContent = "—";
     $("roomAmount").textContent = "—";
     $("childSupplementRow").hidden = true;
+    $("mealPlanSummary").textContent = "Room only";
+    $("breakfastChargeRow").hidden = true;
+    $("dinnerNoticeRow").hidden = true;
     $("taxAmount").textContent = "—";
     $("totalAmount").textContent = "—";
     $("continueButton").disabled = true;
@@ -509,11 +551,17 @@ function updateSummary() {
   const roomCount = state.guestRooms.length;
   const baseAmount = nights > 0 ? nights * Number(room.pricePerNight) * roomCount : 0;
   const childAmount = nights > 0 ? nights * childSupplementPerNight() : 0;
-  const subtotal = baseAmount + childAmount;
+  const breakfastAmount = nights > 0 ? nights * breakfastChargePerNight() : 0;
+  const mealPlan = selectedMealPlan();
+  const subtotal = baseAmount + childAmount + breakfastAmount;
   const taxes = Math.round(subtotal * 0.12);
   $("roomAmount").textContent = baseAmount ? formatMoney(baseAmount) : "—";
   $("childSupplementRow").hidden = childAmount <= 0;
   $("childSupplementAmount").textContent = childAmount ? formatMoney(childAmount) : "—";
+  $("mealPlanSummary").textContent = mealPlan.label;
+  $("breakfastChargeRow").hidden = breakfastAmount <= 0;
+  $("breakfastChargeAmount").textContent = breakfastAmount ? formatMoney(breakfastAmount) : "—";
+  $("dinnerNoticeRow").hidden = !mealPlan.dinner;
   $("taxAmount").textContent = subtotal ? formatMoney(taxes) : "—";
   $("totalAmount").textContent = subtotal ? formatMoney(subtotal + taxes) : "—";
   $("continueButton").disabled = !(room && nights > 0);
@@ -592,7 +640,8 @@ async function createHold(customerId) {
           checkInDate: $("checkIn").value,
           checkOutDate: $("checkOut").value,
           adults: Number(roomGuests.adults),
-          childAge: roomGuests.childAge === null || roomGuests.childAge === "" ? null : Number(roomGuests.childAge)
+          childAge: roomGuests.childAge === null || roomGuests.childAge === "" ? null : Number(roomGuests.childAge),
+          mealPlan: state.mealPlan
         })
       });
       if (!booking?.id) throw new Error("Booking was created but no booking ID was returned.");
@@ -698,10 +747,11 @@ function renderGuestRooms() {
       <label>Child
         <select class="room-child-age" data-room-index="${index}">
           <option value="" ${entry.childAge === null || entry.childAge === "" ? "selected" : ""}>No child</option>
-          ${Array.from({length: 18}, (_, age) => `<option value="${age}" ${Number(entry.childAge) === age ? "selected" : ""}>Age ${age}${age < 2 ? " · Free" : age < 12 ? " · 50% extra bed" : " · Counts as adult"}</option>`).join("")}
+          ${Array.from({length: 18}, (_, age) => `<option value="${age}" ${Number(entry.childAge) === age ? "selected" : ""}>Age ${age}${age < 4 ? " · Free" : age < 12 ? " · 50% extra bed" : " · Counts as adult"}</option>`).join("")}
         </select>
       </label>
       <p class="room-rule-message"></p>
+      <button class="room-add-inline" data-add-room="${index}" type="button" hidden>+ Add another room</button>
     </div>
   `).join("");
 
@@ -719,6 +769,9 @@ function renderGuestRooms() {
       updateSummary();
     });
   });
+  document.querySelectorAll("[data-add-room]").forEach((button) => {
+    button.addEventListener("click", () => addAnotherRoom(Number(button.dataset.addRoom)));
+  });
   state.guestRooms.forEach((_, index) => validateGuestRoomCard(index));
 }
 
@@ -727,6 +780,7 @@ function validateGuestRoomCard(index) {
   const card = document.querySelector(`[data-room-index="${index}"].guest-room-card`);
   if (!card) return;
   const message = card.querySelector(".room-rule-message");
+  const addRoom = card.querySelector(".room-add-inline");
   try {
     const adults = Number(entry.adults || 0);
     const hasChild = entry.childAge !== null && entry.childAge !== "";
@@ -736,24 +790,43 @@ function validateGuestRoomCard(index) {
     if (effectiveAdults > 3 || (youngChild && adults > 2) || effectiveAdults + (youngChild ? 1 : 0) > 3) {
       throw new Error("Occupancy exceeded — add another room.");
     }
-    if (age !== null && age < 2) message.textContent = "Child under 2 stays free.";
-    else if (age !== null && age < 12) message.textContent = "Child extra bed is charged at 50% of the adult room rate.";
+    if (age !== null && age < 4) message.textContent = "Child age 0–3 stays free.";
+    else if (age !== null && age < 12) message.textContent = "Age 4–11: extra bed is charged at 50% of the adult room rate.";
     else if (age !== null) message.textContent = "Age 12+ is counted as an adult.";
     else message.textContent = "Maximum 3 adults, or 2 adults + 1 child.";
     card.classList.remove("invalid");
+    addRoom.hidden = true;
   } catch (error) {
     message.textContent = error.message;
     card.classList.add("invalid");
+    addRoom.hidden = state.guestRooms.length >= 4;
   }
 }
 
 function setRoomCount(count) {
   const target = Math.max(1, Math.min(4, Number(count)));
-  while (state.guestRooms.length < target) state.guestRooms.push({ adults: 2, childAge: null });
+  while (state.guestRooms.length < target) state.guestRooms.push({ adults: 1, childAge: null });
   while (state.guestRooms.length > target) state.guestRooms.pop();
   $("roomCount").value = String(target);
   renderGuestRooms();
   updateSummary();
+}
+
+function addAnotherRoom(sourceIndex = null) {
+  if (state.guestRooms.length >= 4) {
+    toast("You can select up to 4 rooms.");
+    return;
+  }
+
+  const newRoom = { adults: 1, childAge: null };
+  if (sourceIndex !== null && state.guestRooms[sourceIndex] && Number(state.guestRooms[sourceIndex].adults) > 1) {
+    state.guestRooms[sourceIndex].adults -= 1;
+  }
+  state.guestRooms.push(newRoom);
+  $("roomCount").value = String(state.guestRooms.length);
+  renderGuestRooms();
+  updateSummary();
+  toast("Another room has been added.");
 }
 
 function initGuestSelector() {
@@ -766,6 +839,7 @@ function initGuestSelector() {
   });
   $("guestSelectorPanel").addEventListener("click", (event) => event.stopPropagation());
   $("roomCount").addEventListener("change", () => setRoomCount($("roomCount").value));
+  $("addRoomButton").addEventListener("click", () => addAnotherRoom());
   $("guestApplyButton").addEventListener("click", () => {
     try {
       validateOccupancy();
@@ -959,12 +1033,18 @@ $("accountModal").addEventListener("click", (event) => { if (event.target === $(
 $("refreshBookingsButton").addEventListener("click", loadMemberBookings);
 $("roomDetailsClose").addEventListener("click", closeRoomDetails);
 $("roomDetailsModal").addEventListener("click", (event) => { if (event.target === $("roomDetailsModal")) closeRoomDetails(); });
+document.querySelectorAll('input[name="mealPlan"]').forEach((input) => {
+  input.addEventListener("change", () => {
+    state.pendingMealPlan = input.value;
+  });
+});
 $("roomDetailsSelect").addEventListener("click", () => {
   if (state.detailsRoomId === null) return;
   const roomId = state.detailsRoomId;
+  const mealPlan = state.pendingMealPlan;
   closeRoomDetails();
-  selectRoom(roomId);
-  toast("Room selected.");
+  selectRoom(roomId, mealPlan);
+  toast(`Room selected · ${MEAL_PLANS[mealPlan].label}.`);
 });
 $("shareExperienceButton").addEventListener("click", openExperienceModal);
 $("experienceModalClose").addEventListener("click", closeExperienceModal);
