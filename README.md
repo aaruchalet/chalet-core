@@ -7,6 +7,8 @@ A Spring Boot backend for a resort-management system, built with Java 21, MySQL,
 - Customer management
 - Room and room-type management
 - Booking lifecycle management
+- Member sign-up/sign-in with password or OTP
+- Optional Google OAuth sign-in
 - Flyway database migrations
 - Spring Boot Actuator health checks
 - Docker support
@@ -136,6 +138,35 @@ For a full local startup from a clean terminal, one command is enough:
 ```bash
 make run-dev
 ```
+
+## Authentication
+
+The booking UI includes member sign-up and sign-in.
+
+Supported flows:
+
+- Email or phone + password
+- Email or phone + 6-digit OTP
+- Google OAuth 2.0 when Google credentials are configured
+- Session-based sign-in state
+- Normal sign-up creates/links a `customer` record so the signed-in member can book directly
+
+For local development, OTPs are returned by the API and logged so the flow can be tested without an SMS/email provider. Production OTP delivery still requires an external email/SMS provider.
+
+To enable Google sign-in, configure a Google OAuth web client and set:
+
+```bash
+export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID='<google-client-id>'
+export SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET='<google-client-secret>'
+```
+
+Use this authorized redirect URI in the Google OAuth client:
+
+```text
+http://localhost:8080/login/oauth2/code/google
+```
+
+If the application runs on another port, use that port in the redirect URI.
 
 ## Docker
 
