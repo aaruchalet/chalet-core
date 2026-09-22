@@ -32,8 +32,17 @@
 
     <div class="header-actions">
       <button class="currency-button" type="button">INR ₹ <span>⌄</span></button>
-      <button class="icon-button" type="button" aria-label="Saved stays">♡</button>
-      <button class="sign-in-button" id="signInButton" type="button"><span aria-hidden="true">♙</span> <span id="signInLabel">Sign in</span></button>
+      <button class="icon-button" id="savedStaysButton" type="button" aria-label="Saved stays">♡</button>
+      <div class="account-control">
+        <button class="sign-in-button" id="signInButton" type="button" aria-haspopup="menu" aria-expanded="false"><span aria-hidden="true">♙</span> <span id="signInLabel">Sign in</span></button>
+        <div class="account-menu" id="accountMenu" role="menu" hidden>
+          <button type="button" role="menuitem" data-account-view="profile">Profile</button>
+          <button type="button" role="menuitem" data-account-view="bookings">Bookings / Orders</button>
+          <button type="button" role="menuitem" data-account-view="payments">Payments</button>
+          <button type="button" role="menuitem" data-account-view="wishlist">Saved / Wishlist</button>
+          <button class="account-menu-signout" id="headerLogoutButton" type="button" role="menuitem">Sign out</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -77,19 +86,38 @@
           </span>
         </label>
 
-        <label class="search-field guest-field">
+        <div class="search-field guest-field guest-picker">
           <span class="field-icon">♙</span>
           <span class="field-copy">
-            <small>Guests</small>
-            <select id="guests" aria-label="Guests">
-              <option value="1">1 Adult</option>
-              <option value="2" selected>2 Adults</option>
-              <option value="3">2 Adults, 1 Child</option>
-              <option value="4">3 Adults, 1 Child</option>
-              <option value="5">4 Guests</option>
-            </select>
+            <small>Guests & rooms</small>
+            <button class="guest-selector-trigger" id="guestSelectorButton" type="button" aria-expanded="false" aria-controls="guestSelectorPanel">
+              <span id="guestSelectorSummary">2 Adults · 1 Room</span>
+              <span aria-hidden="true">⌄</span>
+            </button>
           </span>
-        </label>
+          <div class="guest-selector-panel" id="guestSelectorPanel" hidden>
+            <div class="guest-selector-head">
+              <div>
+                <strong>Guests & rooms</strong>
+                <small>Maximum occupancy: 3 people per room.</small>
+              </div>
+              <label class="room-count-control">Rooms
+                <select id="roomCount" aria-label="Number of rooms">
+                  <option value="1" selected>1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </label>
+            </div>
+            <div class="guest-room-list" id="guestRoomList"></div>
+            <div class="child-policy">
+              <strong>Child policy</strong>
+              <span>Under 2 years: free · Ages 2–11: 50% of adult rate when an extra bed is required · Age 12+: counted as an adult.</span>
+            </div>
+            <button class="guest-apply-button" id="guestApplyButton" type="button">Apply guests</button>
+          </div>
+        </div>
 
         <button class="search-button" type="submit"><span>⌕</span> Search Stays</button>
       </form>
@@ -127,10 +155,7 @@
           <div class="filter-group">
             <h4>Property Type</h4>
             <label><input class="type-filter" type="checkbox" value="chalet" checked> Chalet</label>
-            <label><input class="type-filter" type="checkbox" value="room"> Room</label>
-            <label><input class="type-filter" type="checkbox" value="suite"> Suite</label>
-            <label><input class="type-filter" type="checkbox" value="villa"> Villa</label>
-            <label><input class="type-filter" type="checkbox" value="cottage"> Cottage</label>
+            <label><input class="type-filter" type="checkbox" value="suite" checked> Suite</label>
           </div>
 
           <div class="filter-group">
@@ -156,11 +181,12 @@
 
           <div class="booking-meta">
             <div><span>▣</span><p id="summaryDates">Select check-in and check-out</p><small id="summaryNights">—</small></div>
-            <div><span>♙</span><p id="summaryGuests">2 Adults</p></div>
+            <div><span>♙</span><p id="summaryGuests">2 Adults · 1 Room</p></div>
           </div>
 
           <div class="price-breakdown">
             <div><span>Room Amount</span><strong id="roomAmount">—</strong></div>
+            <div id="childSupplementRow" hidden><span>Child Extra-bed Supplement</span><strong id="childSupplementAmount">—</strong></div>
             <div><span>Estimated Taxes & Fees (12%)</span><strong id="taxAmount">—</strong></div>
             <div class="total-row"><span>Total Amount</span><strong id="totalAmount">—</strong></div>
           </div>
@@ -184,6 +210,68 @@
       <div><span>▣</span><p><strong>Secure Booking</strong><small>Protected booking flow</small></p></div>
       <div><span>◷</span><p><strong>Flexible Planning</strong><small>Simple cancellation flow</small></p></div>
       <div><span>☏</span><p><strong>Guest Support</strong><small>We’re here to help</small></p></div>
+    </section>
+
+    <section class="experience-section" id="experiences">
+      <div class="section-heading centered">
+        <p class="section-kicker">Guest moments</p>
+        <h2>Experiences at Aaru’s Chalet</h2>
+        <p>Photos and stories shared by guests will live here. As a new stay, we are starting with a clean slate—no manufactured reviews or placeholder testimonials.</p>
+      </div>
+      <div class="experience-grid" id="experienceGrid">
+        <div class="experience-empty" id="experienceEmpty">
+          <span aria-hidden="true">◇</span>
+          <strong>Be among the first to share a mountain memory.</strong>
+          <p>Signed-in guests can add a photo and a short comment after their stay.</p>
+          <button id="shareExperienceButton" type="button">Share your experience</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="about-section" id="about">
+      <div class="about-copy">
+        <p class="section-kicker">About the stay</p>
+        <h2>Manali, framed by snow, orchards and quiet Himalayan roads.</h2>
+        <p>Aaru’s Chalet is designed around the landscape rather than away from it: crisp mountain air, long valley views, snow-bright winters, orchard country and slower roads through the Himalayas.</p>
+        <p>Manali sits in the Beas River valley and is known for its cool climate, snow-capped mountain setting and access to the wider Kullu valley. From deep-winter snowfall to spring blossom and orchard seasons, the surroundings change character throughout the year.</p>
+        <div class="about-points">
+          <span>Snow-season mountain views</span>
+          <span>Scenic Himachal road journeys</span>
+          <span>Apple-orchard country</span>
+          <span>Spring blossom landscapes</span>
+        </div>
+      </div>
+      <div class="scenic-gallery" aria-label="Manali and Himalayan scenery">
+        <figure class="scenic-card scenic-card-large">
+          <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=86" alt="Snow-covered Himalayan mountain landscape">
+          <figcaption><strong>Snow & high mountains</strong><span>Winter turns the valley into a quiet white landscape.</span></figcaption>
+        </figure>
+        <figure class="scenic-card">
+          <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1000&q=84" alt="Scenic mountain road through a Himalayan landscape">
+          <figcaption><strong>The road into the mountains</strong><span>Long drives, changing light and dramatic valley views.</span></figcaption>
+        </figure>
+        <figure class="scenic-card">
+          <img src="https://media.vrbo.com/lodging/105000000/104230000/104223600/104223549/043fd738.jpg?impolicy=resizecrop&ra=fill&rh=900&rw=1200" alt="Orchard landscape with Himalayan mountains behind">
+          <figcaption><strong>Orchard country</strong><span>Apple-growing hillsides are part of the Kullu-Manali landscape.</span></figcaption>
+        </figure>
+        <figure class="scenic-card">
+          <img src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1000&q=84" alt="Spring blossom flowers">
+          <figcaption><strong>Spring blossom</strong><span>Fresh colour returns as winter recedes from the lower valley.</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+      <div>
+        <p class="section-kicker">Contact</p>
+        <h2>Plan your stay with us.</h2>
+        <p>For booking questions, stay planning or direct assistance, contact Aaru’s Chalet.</p>
+      </div>
+      <div class="contact-card">
+        <div><small>Contact person</small><strong>Manjeet Kumar</strong></div>
+        <div><small>Email</small><a href="mailto:manjeetkumar@aaruchalet.com">manjeetkumar@aaruchalet.com</a></div>
+        <div><small>Phone</small><a href="tel:+919776956000">+91 97769 56000</a></div>
+      </div>
     </section>
   </main>
 
@@ -317,6 +405,57 @@
         </div>
         <label class="full-field"><span>Address</span><input id="guestAddress" placeholder="City, state"></label>
         <button class="modal-primary" type="submit">Create Guest & Hold Room</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="accountModal" hidden>
+    <section class="account-modal" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+      <button class="modal-close" id="accountModalClose" type="button" aria-label="Close">×</button>
+      <div class="account-modal-head">
+        <p class="modal-kicker">Aaru’s Chalet account</p>
+        <h2 id="accountModalTitle">My account</h2>
+        <p id="accountWelcome">Manage your profile, bookings, payments and saved stays.</p>
+      </div>
+      <div class="account-layout">
+        <nav class="account-tabs" aria-label="Account sections">
+          <button class="active" type="button" data-account-tab="profile">Profile</button>
+          <button type="button" data-account-tab="bookings">Bookings / Orders</button>
+          <button type="button" data-account-tab="payments">Payments</button>
+          <button type="button" data-account-tab="wishlist">Saved / Wishlist</button>
+        </nav>
+        <div class="account-content">
+          <section class="account-pane" data-account-pane="profile">
+            <h3>Profile</h3>
+            <div class="profile-grid" id="profileDetails"></div>
+          </section>
+          <section class="account-pane" data-account-pane="bookings" hidden>
+            <div class="account-pane-heading"><div><h3>Bookings / Orders</h3><p>Your reservations from Chalet Core.</p></div><button id="refreshBookingsButton" type="button">Refresh</button></div>
+            <div id="memberBookings" class="account-list"><div class="account-empty">Loading bookings…</div></div>
+          </section>
+          <section class="account-pane" data-account-pane="payments" hidden>
+            <h3>Payments</h3>
+            <div id="memberPayments" class="account-list"></div>
+          </section>
+          <section class="account-pane" data-account-pane="wishlist" hidden>
+            <h3>Saved / Wishlist</h3>
+            <div id="wishlistList" class="wishlist-list"></div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="experienceModal" hidden>
+    <section class="guest-modal experience-modal" role="dialog" aria-modal="true" aria-labelledby="experienceModalTitle">
+      <button class="modal-close" id="experienceModalClose" type="button" aria-label="Close">×</button>
+      <p class="modal-kicker">Share a guest moment</p>
+      <h2 id="experienceModalTitle">Your experience</h2>
+      <p class="modal-intro">Add one photo and a short comment. This first version stores submissions in this browser until the guest-media backend is connected.</p>
+      <form id="experienceForm" class="experience-form">
+        <label><span>Photo</span><input id="experiencePhoto" type="file" accept="image/*" required></label>
+        <label><span>Comment</span><textarea id="experienceComment" maxlength="500" required placeholder="What made your stay memorable?"></textarea></label>
+        <button class="modal-primary" type="submit">Publish experience</button>
       </form>
     </section>
   </div>

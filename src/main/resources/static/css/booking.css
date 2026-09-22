@@ -206,3 +206,139 @@ button{cursor:pointer}
 .auth-status.error{display:block;padding:9px 11px;background:#fff2f1;border:1px solid #efcfcb;color:var(--danger)}
 .auth-status.success{display:block;padding:9px 11px;background:#eef8f3;border:1px solid #cce3d8;color:var(--forest)}
 .member-points{margin:12px 0 4px;padding:10px 12px;border-radius:9px;background:#fff8e8;border:1px solid #ead7a5;color:#6a4d12;font-size:11px;font-weight:800}
+
+
+/* Version 1 experience, account and occupancy enhancements */
+.account-control{position:relative}
+.account-menu{position:absolute;right:0;top:46px;width:220px;padding:8px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 48px rgba(10,40,34,.16);z-index:80}
+.account-menu[hidden]{display:none}
+.account-menu button{width:100%;border:0;background:transparent;text-align:left;padding:10px 12px;border-radius:8px;color:var(--ink);font-size:12px;font-weight:650}
+.account-menu button:hover{background:var(--soft)}
+.account-menu .account-menu-signout{border-top:1px solid #edf1ef;border-radius:0;margin-top:4px;padding-top:12px;color:var(--danger)}
+
+.guest-picker{position:relative}
+.guest-selector-trigger{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;border:0;background:transparent;padding:0;color:var(--ink);font-weight:700;text-align:left}
+.guest-selector-panel{position:absolute;top:calc(100% + 10px);right:0;width:min(520px,92vw);padding:16px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 55px rgba(10,40,34,.22);z-index:70}
+.guest-selector-panel[hidden]{display:none}
+.guest-selector-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding-bottom:12px;border-bottom:1px solid #edf1ef}
+.guest-selector-head>div{display:grid;gap:3px}
+.guest-selector-head strong{font-size:14px}
+.guest-selector-head small{font-size:10px;color:var(--muted)}
+.room-count-control{display:grid;gap:5px;font-size:10px;font-weight:800;color:#50605a}
+.room-count-control select{border:1px solid #ccd7d2;border-radius:8px;padding:7px 26px 7px 9px;background:#fff}
+.guest-room-list{display:grid;gap:10px;margin:12px 0}
+.guest-room-card{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end;border:1px solid #e0e7e3;border-radius:11px;padding:11px;background:#fbfcfb}
+.guest-room-card.invalid{border-color:#e7b8b3;background:#fff7f6}
+.guest-room-title{display:grid;align-self:center}
+.guest-room-title strong{font-size:12px}
+.guest-room-title small{font-size:9px;color:var(--muted);margin-top:3px}
+.guest-room-card label{display:grid;gap:5px;font-size:9px;font-weight:800;color:#52615b}
+.guest-room-card select{width:100%;border:1px solid #ced9d4;border-radius:8px;background:#fff;padding:8px}
+.room-rule-message{grid-column:1/-1;margin:0;font-size:9px;color:#66736e}
+.guest-room-card.invalid .room-rule-message{color:var(--danger);font-weight:700}
+.child-policy{display:grid;gap:4px;padding:11px;border-radius:9px;background:#f4f8f6;font-size:9px;line-height:1.5;color:#58665f}
+.child-policy strong{font-size:10px;color:var(--forest)}
+.guest-apply-button{width:100%;margin-top:11px;border:0;border-radius:8px;padding:11px;background:var(--forest);color:#fff;font-weight:800}
+
+.save-stay-button{position:absolute;right:9px;top:9px;width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.93);color:var(--forest);font-size:20px;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.14);z-index:2}
+.save-stay-button.saved{background:var(--forest);color:#fff}
+
+.section-heading{max-width:740px}
+.section-heading.centered{text-align:center;margin:0 auto 28px}
+.section-heading h2,.about-copy h2,.contact-section h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:42px;line-height:1.03;margin:5px 0 12px;color:var(--ink)}
+.section-heading p,.about-copy p,.contact-section p{color:var(--muted);font-size:13px;line-height:1.7}
+.section-kicker{text-transform:uppercase;letter-spacing:.16em;font-size:9px!important;font-weight:800;color:var(--forest-2)!important;margin:0!important}
+
+.experience-section{padding:72px 5.2vw;background:linear-gradient(180deg,#fbfcfb,#f5f8f6)}
+.experience-grid{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.experience-empty{grid-column:1/-1;min-height:220px;border:1px dashed #b8cbc3;border-radius:18px;display:grid;place-items:center;align-content:center;text-align:center;padding:28px;background:#fff}
+.experience-empty>span{font-size:32px;color:var(--forest)}
+.experience-empty strong{font-family:"Cormorant Garamond",Georgia,serif;font-size:27px;margin-top:8px}
+.experience-empty p{margin:7px 0 14px;color:var(--muted);font-size:11px}
+.experience-empty button{border:0;border-radius:8px;padding:11px 16px;background:var(--forest);color:#fff;font-weight:800}
+.experience-user-card{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:#fff;box-shadow:0 8px 22px rgba(13,59,52,.05)}
+.experience-user-card img{width:100%;height:220px;object-fit:cover;display:block}
+.experience-user-card div{padding:14px}
+.experience-user-card strong{font-size:12px}
+.experience-user-card p{font-size:11px;line-height:1.55;color:#596760;margin:6px 0 0}
+
+.about-section{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(0,1.35fr);gap:44px;padding:82px 5.2vw;align-items:center}
+.about-copy{max-width:580px}
+.about-points{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:22px}
+.about-points span{padding:10px 12px;border-radius:9px;background:var(--soft);font-size:10px;font-weight:700;color:var(--forest)}
+.scenic-gallery{display:grid;grid-template-columns:1.35fr 1fr;grid-template-rows:repeat(2,230px);gap:12px}
+.scenic-card{margin:0;border-radius:14px;overflow:hidden;position:relative;background:#dfe7e3}
+.scenic-card-large{grid-row:1/-1}
+.scenic-card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease}
+.scenic-card:hover img{transform:scale(1.025)}
+.scenic-card figcaption{position:absolute;left:0;right:0;bottom:0;padding:36px 15px 14px;background:linear-gradient(transparent,rgba(5,26,22,.78));color:#fff;display:grid;gap:3px}
+.scenic-card figcaption strong{font-size:12px}
+.scenic-card figcaption span{font-size:9px;color:#e4ebe8}
+
+.contact-section{padding:70px 5.2vw;display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;background:#0d3b34;color:#fff}
+.contact-section h2,.contact-section .section-kicker{color:#fff!important}
+.contact-section p{color:#d6e3df}
+.contact-card{display:grid;gap:1px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:14px;overflow:hidden}
+.contact-card>div{display:grid;gap:5px;padding:16px 18px;background:rgba(255,255,255,.06)}
+.contact-card small{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:#bcd2ca}
+.contact-card strong,.contact-card a{font-size:14px;color:#fff;text-decoration:none;font-weight:700}
+
+.account-modal{width:min(900px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:20px;padding:28px;box-shadow:0 28px 90px rgba(0,0,0,.3);position:relative}
+.account-modal-head h2{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:38px}
+.account-modal-head>p:last-child{color:var(--muted);font-size:11px;margin:6px 0 18px}
+.account-layout{display:grid;grid-template-columns:190px 1fr;gap:18px}
+.account-tabs{display:grid;align-content:start;gap:6px}
+.account-tabs button{border:0;background:#f6f8f7;color:#53615b;border-radius:9px;padding:11px;text-align:left;font-weight:750;font-size:11px}
+.account-tabs button.active{background:var(--forest);color:#fff}
+.account-content{min-width:0;border:1px solid var(--line);border-radius:13px;padding:18px;min-height:300px}
+.account-pane h3{margin:0 0 14px;font-size:16px}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.profile-grid>div{display:grid;gap:4px;padding:13px;border-radius:9px;background:#f7f9f8}
+.profile-grid small,.booking-history-card small,.payment-card small{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.profile-grid strong,.booking-history-card strong,.payment-card strong{font-size:12px}
+.account-pane-heading{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.account-pane-heading p{font-size:10px;color:var(--muted);margin:3px 0 12px}
+.account-pane-heading button{border:1px solid #ccd9d3;border-radius:7px;background:#fff;padding:7px 10px;color:var(--forest);font-size:10px;font-weight:800}
+.account-list{display:grid;gap:8px}
+.account-empty{border:1px dashed #ccd8d2;border-radius:10px;padding:24px;text-align:center;color:var(--muted);font-size:11px;background:#fbfcfb}
+.booking-history-card,.payment-card{display:grid;grid-template-columns:1fr 1.4fr .8fr;gap:10px;padding:12px;border:1px solid #e1e8e4;border-radius:10px}
+.booking-history-card>div,.payment-card>div{display:grid;gap:4px}
+.payment-card{grid-template-columns:1fr auto;align-items:center}
+.payment-card span{font-size:9px;background:#eef5f2;color:var(--forest);padding:6px 8px;border-radius:999px}
+.wishlist-list{display:grid;gap:9px}
+.wishlist-card{display:grid;grid-template-columns:74px 1fr auto;gap:12px;align-items:center;border:1px solid #e1e8e4;border-radius:10px;padding:8px}
+.wishlist-thumb{width:74px;height:62px;border-radius:8px;background-size:cover;background-position:center}
+.wishlist-card>div:nth-child(2){display:grid;gap:4px}
+.wishlist-card strong{font-size:12px}
+.wishlist-card small{font-size:9px;color:var(--muted)}
+.wishlist-card button{border:0;background:transparent;color:var(--danger);font-size:10px;font-weight:800}
+
+.experience-form{display:grid;gap:13px}
+.experience-form label{display:grid;gap:6px;font-size:10px;font-weight:800;color:#485650}
+.experience-form input,.experience-form textarea{width:100%;border:1px solid #cfd9d5;border-radius:8px;padding:11px;outline:0}
+.experience-form textarea{min-height:120px;resize:vertical}
+
+@media(max-width:900px){
+  .about-section{grid-template-columns:1fr}
+  .scenic-gallery{grid-template-columns:1fr 1fr}
+  .contact-section{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .guest-selector-panel{position:fixed;left:12px;right:12px;top:86px;width:auto;max-height:75vh;overflow:auto}
+  .guest-room-card{grid-template-columns:1fr 1fr}
+  .guest-room-title{grid-column:1/-1}
+  .experience-grid{grid-template-columns:1fr}
+  .about-section,.experience-section,.contact-section{padding-left:18px;padding-right:18px}
+  .scenic-gallery{grid-template-columns:1fr;grid-template-rows:repeat(4,220px)}
+  .scenic-card-large{grid-row:auto}
+  .account-layout{grid-template-columns:1fr}
+  .account-tabs{grid-template-columns:1fr 1fr}
+  .booking-history-card{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .profile-grid{grid-template-columns:1fr}
+  .about-points{grid-template-columns:1fr}
+  .account-tabs{grid-template-columns:1fr}
+  .wishlist-card{grid-template-columns:64px 1fr}
+  .wishlist-card button{grid-column:2}
+}
