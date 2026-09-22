@@ -422,3 +422,14 @@ body{padding-top:72px}
   .guest-selector-actions{grid-template-columns:1fr}
   .meal-plan-options{grid-template-columns:1fr}
 }
+
+
+/* Date-aware availability */
+.stay-card.sold-out{opacity:.62;background:#f7f8f7;border-color:#dfe4e2}
+.stay-card.sold-out:hover{transform:none;box-shadow:none}
+.stay-card.sold-out .stay-image{filter:grayscale(.35)}
+.sold-out-badge,.availability-badge{position:absolute;right:9px;top:9px;padding:6px 9px;border-radius:999px;font-size:10px;font-weight:800;z-index:2}
+.sold-out-badge{background:#353b39;color:#fff}
+.availability-badge{background:rgba(255,255,255,.94);color:var(--forest);border:1px solid rgba(13,59,52,.12)}
+.select-stay-button:disabled{background:#d6dcda;color:#6f7975;border:1px solid #c8cfcc;cursor:not-allowed}
+.sold-out-copy{display:block;margin-top:8px;color:#8c514b;font-size:10px;line-height:1.35;text-align:right}

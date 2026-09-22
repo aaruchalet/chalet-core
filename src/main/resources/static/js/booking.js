@@ -1,5 +1,7 @@
 const state = {
   roomTypes: [],
+  availabilityByRoomType: {},
+  availabilityLoaded: false,
   selectedRoom: null,
   selectedImage: null,
   lookupMode: "email",
@@ -363,6 +365,65 @@ async function loadRoomTypes() {
   renderRooms();
 }
 
+function availableRoomCount(roomId) {
+  if (!state.availabilityLoaded) return null;
+  const value = state.availabilityByRoomType[String(roomId)];
+  return Number.isFinite(Number(value)) ? Number(value) : 0;
+}
+
+function roomCanSatisfySelection(roomId) {
+  const available = availableRoomCount(roomId);
+  return available === null || available >= state.guestRooms.length;
+}
+
+function availabilityLabel(roomId) {
+  const available = availableRoomCount(roomId);
+  if (available === null) return "";
+  if (available <= 0) return "Sold out";
+  if (available < state.guestRooms.length) {
+    return `Only ${available} room${available === 1 ? "" : "s"} available`;
+  }
+  return available <= 2 ? `${available} room${available === 1 ? "" : "s"} left` : "";
+}
+
+function clearUnavailableSelection(showMessage = true) {
+  if (!state.selectedRoom || roomCanSatisfySelection(state.selectedRoom.id)) return false;
+  const roomName = state.selectedRoom.typeName;
+  state.selectedRoom = null;
+  state.selectedImage = null;
+  if (showMessage) toast(`${roomName} is sold out for the selected dates and room count.`);
+  return true;
+}
+
+async function loadAvailability({ showError = false } = {}) {
+  if (!$("checkIn").value || !$("checkOut").value || numberOfNights() <= 0) {
+    state.availabilityLoaded = false;
+    state.availabilityByRoomType = {};
+    renderRooms();
+    updateSummary();
+    return;
+  }
+
+  try {
+    const response = await api(
+      `/api/v1/rooms/availability?checkIn=${encodeURIComponent($("checkIn").value)}&checkOut=${encodeURIComponent($("checkOut").value)}`
+    );
+    const rows = Array.isArray(response?.data) ? response.data : [];
+    state.availabilityByRoomType = Object.fromEntries(
+      rows.map((row) => [String(row.roomTypeId), Number(row.availableRooms || 0)])
+    );
+    state.availabilityLoaded = true;
+    clearUnavailableSelection();
+  } catch (error) {
+    state.availabilityLoaded = false;
+    state.availabilityByRoomType = {};
+    if (showError) toast(`Could not refresh availability: ${error.message}`);
+  }
+
+  renderRooms();
+  updateSummary();
+}
+
 function renderRooms() {
   const maxPrice = Number($("priceRange").value);
   let rooms = state.roomTypes.filter((room) => Number(room.pricePerNight) <= maxPrice);
@@ -376,11 +437,16 @@ function renderRooms() {
     return;
   }
 
-  $("roomList").innerHTML = rooms.map((room, index) => `
-    <article class="stay-card ${state.selectedRoom?.id === room.id ? "selected" : ""}" data-id="${room.id}">
+  $("roomList").innerHTML = rooms.map((room, index) => {
+    const available = availableRoomCount(room.id);
+    const canBook = roomCanSatisfySelection(room.id);
+    const availability = availabilityLabel(room.id);
+    return `
+    <article class="stay-card ${state.selectedRoom?.id === room.id ? "selected" : ""} ${canBook ? "" : "sold-out"}" data-id="${room.id}">
       <div class="stay-image" style="background-image:url('${room.image}')">
-        ${room.popular ? '<span class="popular-badge">♛ Guest Favourite</span>' : ""}
+        ${room.popular && canBook ? '<span class="popular-badge">♛ Guest Favourite</span>' : ""}
         ${state.selectedRoom?.id === room.id ? '<span class="selected-badge">Selected</span>' : ""}
+        ${!canBook ? '<span class="sold-out-badge">Sold out</span>' : availability ? `<span class="availability-badge">${escapeHtml(availability)}</span>` : ""}
       </div>
       <div class="stay-body">
         <h3>${escapeHtml(room.typeName)}</h3>
@@ -393,13 +459,15 @@ function renderRooms() {
         <small>per night</small>
         <div class="room-card-actions">
           <button class="view-details-button" type="button" data-room-details="${room.id}">View details</button>
-          <button class="select-stay-button ${state.selectedRoom?.id === room.id ? "selected" : ""}" type="button" data-select-room="${room.id}">
-            ${state.selectedRoom?.id === room.id ? "Selected" : "Select room"}
+          <button class="select-stay-button ${state.selectedRoom?.id === room.id ? "selected" : ""}" type="button" data-select-room="${room.id}" ${canBook ? "" : "disabled"}>
+            ${!canBook ? "Sold out" : state.selectedRoom?.id === room.id ? "Selected" : "Select room"}
           </button>
         </div>
+        ${!canBook ? `<small class="sold-out-copy">Unavailable for ${escapeHtml(prettyDate($("checkIn").value))} – ${escapeHtml(prettyDate($("checkOut").value))}${available > 0 ? ` · only ${available} left` : ""}</small>` : ""}
       </div>
     </article>
-  `).join("");
+  `;
+  }).join("");
 
   document.querySelectorAll("[data-room-details]").forEach((button) => {
     button.addEventListener("click", () => openRoomDetails(Number(button.dataset.roomDetails)));
@@ -413,6 +481,10 @@ function renderRooms() {
 }
 
 function selectRoom(id, mealPlan = "ROOM_ONLY") {
+  if (!roomCanSatisfySelection(id)) {
+    toast("This room is sold out for the selected dates and room count.");
+    return;
+  }
   state.selectedRoom = state.roomTypes.find((room) => Number(room.id) === Number(id)) || null;
   state.selectedImage = state.selectedRoom?.image || null;
   state.mealPlan = MEAL_PLANS[mealPlan] ? mealPlan : "ROOM_ONLY";
@@ -434,12 +506,15 @@ function openRoomDetails(id) {
   $("roomDetailsAmenities").innerHTML = room.amenities.map((item) => `<span><b>✓</b> ${escapeHtml(item)}</span>`).join("");
 
   const alreadySelected = Number(state.selectedRoom?.id) === Number(room.id);
+  const canBook = roomCanSatisfySelection(room.id);
   state.pendingMealPlan = alreadySelected ? state.mealPlan : "ROOM_ONLY";
   document.querySelectorAll('input[name="mealPlan"]').forEach((input) => {
     input.checked = input.value === state.pendingMealPlan;
   });
-  $("roomDetailsSelect").textContent = alreadySelected ? "Update room & meal plan" : "Select this room";
-  $("roomDetailsSelect").disabled = false;
+  $("roomDetailsSelect").textContent = canBook
+    ? (alreadySelected ? "Update room & meal plan" : "Select this room")
+    : "Sold out for selected dates";
+  $("roomDetailsSelect").disabled = !canBook;
   $("roomDetailsModal").hidden = false;
   document.body.style.overflow = "hidden";
 }
@@ -579,6 +654,9 @@ function validateStay() {
   if (!$("checkIn").value || !$("checkOut").value) throw new Error("Choose check-in and check-out dates.");
   if (nights <= 0) throw new Error("Check-out must be after check-in.");
   if (!state.selectedRoom) throw new Error("Choose a room type.");
+  if (!roomCanSatisfySelection(state.selectedRoom.id)) {
+    throw new Error("The selected room is sold out for these dates. Choose another room or different dates.");
+  }
   validateOccupancy();
 }
 
@@ -656,6 +734,7 @@ async function createHold(customerId) {
     }
   } catch (error) {
     await Promise.all(created.map((id) => api(`/api/v1/bookings/${id}/cancel`, { method: "POST" }).catch(() => null)));
+    await loadAvailability().catch(() => null);
     throw error;
   }
 
@@ -816,6 +895,8 @@ function setRoomCount(count) {
   while (state.guestRooms.length > target) state.guestRooms.pop();
   $("roomCount").value = String(target);
   renderGuestRooms();
+  clearUnavailableSelection();
+  renderRooms();
   updateSummary();
 }
 
@@ -832,6 +913,8 @@ function addAnotherRoom(sourceIndex = null) {
   state.guestRooms.push(newRoom);
   $("roomCount").value = String(state.guestRooms.length);
   renderGuestRooms();
+  clearUnavailableSelection();
+  renderRooms();
   updateSummary();
   toast("Another room has been added.");
 }
@@ -1060,11 +1143,11 @@ $("experienceForm").addEventListener("submit", saveExperience);
 initGuestSelector();
 loadExperiences();
 
-$("searchForm").addEventListener("submit", (event) => {
+$("searchForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
     validateStayDatesOnly();
-    updateSummary();
+    await loadAvailability({ showError: true });
     document.querySelector("#stays").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {
     toast(error.message);
@@ -1076,9 +1159,10 @@ function validateStayDatesOnly() {
   if (numberOfNights() <= 0) throw new Error("Check-out must be after check-in.");
 }
 
-["checkIn", "checkOut"].forEach((id) => $(id).addEventListener("change", () => {
+["checkIn", "checkOut"].forEach((id) => $(id).addEventListener("change", async () => {
   if (id === "checkIn") $("checkOut").min = $("checkIn").value;
-  updateSummary();
+  if (numberOfNights() > 0) await loadAvailability();
+  else updateSummary();
 }));
 
 $("priceRange").addEventListener("input", () => {
@@ -1149,7 +1233,9 @@ $("cancelButton").addEventListener("click", cancelBooking);
 
 defaultDates();
 initAuthentication();
-loadRoomTypes().then(() => {
-  if (state.roomTypes.length) selectRoom(state.roomTypes[0].id);
-  updateSummary();
+loadRoomTypes().then(async () => {
+  await loadAvailability();
+  const firstAvailable = state.roomTypes.find((room) => roomCanSatisfySelection(room.id));
+  if (firstAvailable) selectRoom(firstAvailable.id);
+  else updateSummary();
 });

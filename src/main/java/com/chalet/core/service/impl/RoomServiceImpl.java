@@ -5,6 +5,7 @@ import static com.chalet.core.util.Constants.ROOM_NUMBER_ALREADY_EXISTS;
 import static com.chalet.core.util.Constants.ROOM_TYPE_NOT_FOUND;
 
 import com.chalet.core.dto.request.RoomRequest;
+import com.chalet.core.dto.response.RoomAvailabilityResponse;
 import com.chalet.core.dto.response.RoomResponse;
 import com.chalet.core.entity.DbRoom;
 import com.chalet.core.entity.DbRoomType;
@@ -14,6 +15,9 @@ import com.chalet.core.mapper.RoomMapper;
 import com.chalet.core.repository.RoomRepository;
 import com.chalet.core.repository.RoomTypeRepository;
 import com.chalet.core.service.RoomService;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,11 +30,27 @@ public class RoomServiceImpl implements RoomService {
   private final RoomRepository roomRepository;
   private final RoomTypeRepository roomTypeRepository;
   private final RoomMapper roomMapper;
+  private final Clock clock;
 
   @Override
   @Transactional(readOnly = true)
   public List<RoomResponse> findAll() {
     return roomMapper.toDto(roomRepository.findAll());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<RoomAvailabilityResponse> findAvailability(LocalDate checkIn, LocalDate checkOut) {
+    LocalDateTime currentTime = LocalDateTime.now(clock);
+    return roomTypeRepository.findAll().stream()
+            .map(roomType -> new RoomAvailabilityResponse(
+                    roomType.getId(),
+                    roomRepository.countAvailableRoomsForBooking(
+                            roomType.getId(),
+                            checkIn,
+                            checkOut,
+                            currentTime)))
+            .toList();
   }
 
   @Override

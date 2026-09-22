@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.chalet.core.dto.request.RoomRequest;
+import com.chalet.core.dto.response.RoomAvailabilityResponse;
 import com.chalet.core.dto.response.RoomResponse;
 import com.chalet.core.entity.DbRoom;
 import com.chalet.core.entity.DbRoomType;
@@ -16,6 +17,12 @@ import com.chalet.core.exception.ResourceNotFoundException;
 import com.chalet.core.mapper.RoomMapper;
 import com.chalet.core.repository.RoomRepository;
 import com.chalet.core.repository.RoomTypeRepository;
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,11 +42,15 @@ class RoomServiceImplTest {
   @Mock
   private RoomMapper roomMapper;
 
+  private final Clock clock = Clock.fixed(
+          Instant.parse("2026-09-23T06:00:00Z"),
+          ZoneOffset.UTC);
+
   private RoomServiceImpl roomService;
 
   @BeforeEach
   void setUp() {
-    roomService = new RoomServiceImpl(roomRepository, roomTypeRepository, roomMapper);
+    roomService = new RoomServiceImpl(roomRepository, roomTypeRepository, roomMapper, clock);
   }
 
   @Test
@@ -104,6 +115,34 @@ class RoomServiceImplTest {
     assertThat(actual).isEqualTo(response);
     assertThat(existing.getRoomStatus()).isEqualTo(RoomStatus.AVAILABLE);
     assertThat(existing.getRoomType()).isEqualTo(roomType);
+  }
+
+  @Test
+  void findAvailabilityReturnsAvailableCountForEachRoomType() {
+    DbRoomType pine = new DbRoomType();
+    pine.setId(1L);
+    pine.setTypeName("Pine Haven");
+    pine.setPricePerNight(new BigDecimal("2000.00"));
+
+    DbRoomType cedar = new DbRoomType();
+    cedar.setId(2L);
+    cedar.setTypeName("Cedar Retreat");
+    cedar.setPricePerNight(new BigDecimal("2500.00"));
+
+    LocalDate checkIn = LocalDate.of(2026, 10, 10);
+    LocalDate checkOut = LocalDate.of(2026, 10, 12);
+
+    when(roomTypeRepository.findAll()).thenReturn(List.of(pine, cedar));
+    when(roomRepository.countAvailableRoomsForBooking(
+            any(Long.class), any(LocalDate.class), any(LocalDate.class), any()))
+            .thenReturn(2L, 0L);
+
+    List<RoomAvailabilityResponse> availability =
+            roomService.findAvailability(checkIn, checkOut);
+
+    assertThat(availability).containsExactly(
+            new RoomAvailabilityResponse(1L, 2L),
+            new RoomAvailabilityResponse(2L, 0L));
   }
 
   @Test
