@@ -78,7 +78,7 @@ public class AuthService {
 
   @Transactional(readOnly = true)
   public AuthResponse signIn(SignInRequest request) {
-    DbAuthAccount account = findEnabledAccount(request.identifier());
+    DbAuthAccount account = findEnabledAccountForPassword(request.identifier());
     if (account.getPasswordHash() == null
             || !passwordEncoder.matches(request.password(), account.getPasswordHash())) {
       throw new AuthenticationFailedException("Invalid email/phone or password.");
@@ -206,6 +206,18 @@ public class AuthService {
             .orElseThrow(() -> new AuthenticationFailedException(
                     "We couldn’t find an Aaru’s Chalet membership for that email or phone number. "
                             + "If you’re new here, please sign up first."));
+  }
+
+  private DbAuthAccount findEnabledAccountForPassword(String rawIdentifier) {
+    String identifier = normalizeIdentifier(rawIdentifier);
+    Optional<DbAuthAccount> account = identifier.contains("@")
+            ? authAccountRepository.findByEmailIgnoreCase(identifier)
+            : authAccountRepository.findByPhone(identifier);
+
+    return account
+            .filter(DbAuthAccount::isEnabled)
+            .orElseThrow(() -> new AuthenticationFailedException(
+                    "Invalid email/phone or password."));
   }
 
   private DbAuthAccount findEnabledAccount(String rawIdentifier) {
