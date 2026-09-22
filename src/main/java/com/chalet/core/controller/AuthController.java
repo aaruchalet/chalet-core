@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,6 +71,19 @@ public class AuthController {
     AuthResponse account = authService.verifyOtp(request);
     authenticate(session, account);
     return ResponseEntity.ok(ApiResponse.success("OTP verified. Signed in successfully.", account));
+  }
+
+  @PostMapping("/customer/{customerId}")
+  public ResponseEntity<ApiResponse<AuthResponse>> linkCustomer(
+          @PathVariable Long customerId,
+          HttpSession session) {
+    Object accountId = session.getAttribute(AUTH_SESSION_KEY);
+    if (!(accountId instanceof Long id)) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+              .body(new ApiResponse<>(false, null, null, "Sign in before linking a guest profile."));
+    }
+    AuthResponse account = authService.linkCustomer(id, customerId);
+    return ResponseEntity.ok(ApiResponse.success("Guest profile linked.", account));
   }
 
   @GetMapping("/me")
