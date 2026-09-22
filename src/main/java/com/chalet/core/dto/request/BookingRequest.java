@@ -1,5 +1,6 @@
 package com.chalet.core.dto.request;
 
+import com.chalet.core.enums.MealPlan;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Max;
@@ -31,6 +32,9 @@ public class BookingRequest {
   @Min(value = 0, message = "Child age cannot be negative")
   @Max(value = 17, message = "Child age must be 17 or below")
   private Integer childAge;
+
+  @NotNull
+  private MealPlan mealPlan = MealPlan.ROOM_ONLY;
 
   @AssertTrue(message = "Room occupancy is limited to 3 people: up to 3 adults, or 2 adults plus 1 child")
   public boolean isOccupancyValid() {

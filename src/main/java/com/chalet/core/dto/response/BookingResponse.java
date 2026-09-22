@@ -1,6 +1,7 @@
 package com.chalet.core.dto.response;
 
 import com.chalet.core.enums.BookingStatus;
+import com.chalet.core.enums.MealPlan;
 import java.time.LocalDate;
 
 public record BookingResponse(
@@ -11,6 +12,7 @@ public record BookingResponse(
         LocalDate checkOutDate,
         int adults,
         Integer childAge,
+        MealPlan mealPlan,
         BookingStatus bookingStatus
 ) {
 }

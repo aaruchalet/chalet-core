@@ -1,6 +1,7 @@
 package com.chalet.core.entity;
 
 import com.chalet.core.enums.BookingStatus;
+import com.chalet.core.enums.MealPlan;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -76,6 +77,10 @@ public class DbBooking {
 
   @Column(name = "child_age")
   private Integer childAge;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "meal_plan", nullable = false)
+  private MealPlan mealPlan = MealPlan.ROOM_ONLY;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "booking_status", nullable = false)
