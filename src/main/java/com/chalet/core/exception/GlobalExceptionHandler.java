@@ -15,6 +15,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+  @ExceptionHandler(AuthenticationFailedException.class)
+  public ResponseEntity<ApiResponse<Void>> handleAuthenticationFailed(
+          AuthenticationFailedException exception) {
+    return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponse.failure(exception.getMessage()));
+  }
+
   @ExceptionHandler(DuplicateResourceException.class)
   public ResponseEntity<ApiResponse<Void>> handleDuplicate(DuplicateResourceException exception) {
     return ResponseEntity
