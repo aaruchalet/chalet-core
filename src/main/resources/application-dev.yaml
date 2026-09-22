@@ -18,3 +18,7 @@ management:
   endpoint:
     health:
       show-details: always
+
+chalet:
+  auth:
+    expose-dev-otp: true
