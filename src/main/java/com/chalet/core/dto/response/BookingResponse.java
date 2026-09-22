@@ -13,6 +13,7 @@ public record BookingResponse(
         int adults,
         Integer childAge,
         MealPlan mealPlan,
+        int rewardPointsRedeemed,
         BookingStatus bookingStatus
 ) {
 }
