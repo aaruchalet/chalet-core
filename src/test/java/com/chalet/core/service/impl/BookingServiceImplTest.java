@@ -209,6 +209,8 @@ class BookingServiceImplTest {
             20L,
             LocalDate.of(2026, 10, 1),
             LocalDate.of(2026, 10, 2),
+            2,
+            null,
             status);
   }
 }
