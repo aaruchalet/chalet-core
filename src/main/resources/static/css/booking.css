@@ -433,3 +433,9 @@ body{padding-top:72px}
 .availability-badge{background:rgba(255,255,255,.94);color:var(--forest);border:1px solid rgba(13,59,52,.12)}
 .select-stay-button:disabled{background:#d6dcda;color:#6f7975;border:1px solid #c8cfcc;cursor:not-allowed}
 .sold-out-copy{display:block;margin-top:8px;color:#8c514b;font-size:10px;line-height:1.35;text-align:right}
+
+
+/* Manual availability search + member-points billing */
+.availability-prompt{display:block;margin-top:8px;color:var(--muted);font-size:10px;line-height:1.35;text-align:right}
+.member-points-row{padding-top:8px;border-top:1px dashed #d9e2de;color:var(--forest)}
+.member-points-row span,.member-points-row strong{color:var(--forest);font-weight:800}
