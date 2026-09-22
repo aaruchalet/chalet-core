@@ -159,6 +159,39 @@ class RoomRepositoryIntegrationTest {
   }
 
   @Test
+  void countsOnlyRoomsAvailableForRequestedDates() {
+    saveBooking(
+            firstRoom,
+            LocalDate.of(2026, 10, 10),
+            LocalDate.of(2026, 10, 12),
+            BookingStatus.CONFIRMED,
+            null);
+
+    long oneAvailable = roomRepository.countAvailableRoomsForBooking(
+            roomType.getId(),
+            LocalDate.of(2026, 10, 11),
+            LocalDate.of(2026, 10, 13),
+            CURRENT_TIME);
+
+    assertThat(oneAvailable).isEqualTo(1);
+
+    saveBooking(
+            secondRoom,
+            LocalDate.of(2026, 10, 10),
+            LocalDate.of(2026, 10, 12),
+            BookingStatus.HELD,
+            CURRENT_TIME.plusMinutes(5));
+
+    long noneAvailable = roomRepository.countAvailableRoomsForBooking(
+            roomType.getId(),
+            LocalDate.of(2026, 10, 11),
+            LocalDate.of(2026, 10, 13),
+            CURRENT_TIME);
+
+    assertThat(noneAvailable).isZero();
+  }
+
+  @Test
   void adjacentBookingDoesNotCountAsOverlap() {
     saveBooking(
             firstRoom,
