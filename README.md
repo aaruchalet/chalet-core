@@ -109,13 +109,15 @@ Run the application with the development profile:
 make run-dev
 ```
 
-`make run-dev` starts the local MySQL container first and then launches Spring Boot with explicit local datasource arguments. These command-line arguments take precedence over stale `SPRING_DATASOURCE_*` environment variables, so an old invalid datasource URL cannot break normal local startup.
+`make run-dev` starts the local MySQL container first and then runs the dedicated Gradle `bootRunDev` task. That task supplies the dev profile and local datasource as Spring Boot command-line arguments, so stale `SPRING_DATASOURCE_*` environment variables cannot override the local JDBC configuration.
 
 Equivalent Gradle command:
 
 ```bash
-./gradlew bootRun --args='--spring.profiles.active=dev --spring.datasource.url=jdbc:mysql://localhost:2211/chalet_db --spring.datasource.username=chalet_app --spring.datasource.password=chalet_app_dev'
+./gradlew bootRunDev
 ```
+
+Use `bootRunDev` for local development instead of plain `bootRun`.
 
 Application:
 
