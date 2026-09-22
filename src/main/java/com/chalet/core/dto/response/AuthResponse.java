@@ -7,5 +7,6 @@ public record AuthResponse(
         String email,
         String phone,
         String location,
-        String authProvider
+        String authProvider,
+        int rewardPoints
 ) {}

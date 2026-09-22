@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,11 +30,6 @@ public class AuthController {
 
   private final AuthService authService;
 
-  @Value("${spring.security.oauth2.client.registration.google.client-id:}")
-  private String googleClientId;
-
-  @Value("${spring.security.oauth2.client.registration.google.client-secret:}")
-  private String googleClientSecret;
 
   @PostMapping("/signup")
   public ResponseEntity<ApiResponse<AuthResponse>> signUp(
@@ -44,7 +38,9 @@ public class AuthController {
     AuthResponse account = authService.signUp(request);
     authenticate(session, account);
     return ResponseEntity.status(HttpStatus.CREATED)
-            .body(ApiResponse.success("Account created successfully.", account));
+            .body(ApiResponse.success(
+                    "Welcome to Aaru’s Chalet. 500 welcome points (worth ₹500) have been added to your membership.",
+                    account));
   }
 
   @PostMapping("/signin")
@@ -98,8 +94,7 @@ public class AuthController {
 
   @GetMapping("/config")
   public ResponseEntity<ApiResponse<Map<String, Boolean>>> config() {
-    boolean googleEnabled = !googleClientId.isBlank() && !googleClientSecret.isBlank();
-    return ResponseEntity.ok(ApiResponse.success(Map.of("googleEnabled", googleEnabled)));
+    return ResponseEntity.ok(ApiResponse.success(Map.of("googleEnabled", false)));
   }
 
   @PostMapping("/logout")

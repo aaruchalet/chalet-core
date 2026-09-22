@@ -46,6 +46,9 @@ public class DbAuthAccount {
   @Column(nullable = false)
   private boolean enabled = true;
 
+  @Column(name = "reward_points", nullable = false)
+  private int rewardPoints;
+
   @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
 

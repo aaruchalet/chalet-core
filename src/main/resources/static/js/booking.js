@@ -60,8 +60,11 @@ async function api(url, options = {}) {
 }
 
 
-function setAuthStatus(message = "") {
-  $("authStatus").textContent = message;
+function setAuthStatus(message = "", kind = "error") {
+  const status = $("authStatus");
+  status.textContent = message;
+  status.classList.toggle("success", Boolean(message) && kind === "success");
+  status.classList.toggle("error", Boolean(message) && kind !== "success");
 }
 
 function setAuthMode(mode) {
@@ -74,7 +77,7 @@ function setAuthMode(mode) {
   $("authModalTitle").textContent = mode === "signin" ? "Welcome back" : "Create your account";
   $("authModalIntro").textContent = mode === "signin"
     ? "Sign in as an existing guest or member using your password or a one-time OTP."
-    : "Join Aaru’s Chalet with your basic details, or continue with Google.";
+    : "Join Aaru’s Chalet with your basic details and receive 500 welcome points worth ₹500.";
   setAuthStatus("");
 }
 
@@ -97,6 +100,11 @@ function renderAuthState() {
   $("signedInDetails").textContent = [user.email, user.phone, user.location]
     .filter(Boolean)
     .join(" • ");
+  const points = Number(user.rewardPoints || 0);
+  $("memberPoints").hidden = points <= 0;
+  $("memberPoints").textContent = points > 0
+    ? `${points} membership points · ₹${points} booking value`
+    : "";
 }
 
 function setAuthUser(user) {
@@ -118,14 +126,9 @@ function closeAuthModal() {
 }
 
 async function loadAuthConfig() {
-  try {
-    const response = await api("/api/v1/auth/config");
-    state.googleEnabled = Boolean(response?.data?.googleEnabled);
-  } catch {
-    state.googleEnabled = false;
-  }
-  $("googleAuthButton").disabled = !state.googleEnabled;
-  $("googleConfigNote").hidden = state.googleEnabled;
+  state.googleEnabled = false;
+  $("googleAuthButton").disabled = true;
+  $("googleConfigNote").hidden = false;
 }
 
 async function loadAuthState() {
@@ -139,7 +142,7 @@ async function loadAuthState() {
 
 async function signInMember(event) {
   event.preventDefault();
-  setAuthStatus("Signing in…");
+  setAuthStatus("Signing in…", "success");
   try {
     const response = await api("/api/v1/auth/signin", {
       method: "POST",
@@ -149,10 +152,11 @@ async function signInMember(event) {
       })
     });
     setAuthUser(response?.data);
+    setAuthStatus("");
     closeAuthModal();
     toast("Signed in successfully.");
   } catch (error) {
-    setAuthStatus(error.message);
+    setAuthStatus(error.message, "error");
   }
 }
 
@@ -164,7 +168,7 @@ async function signUpMember(event) {
     return;
   }
 
-  setAuthStatus("Creating your account…");
+  setAuthStatus("Creating your account…", "success");
   try {
     const response = await api("/api/v1/auth/signup", {
       method: "POST",
@@ -177,10 +181,11 @@ async function signUpMember(event) {
       })
     });
     setAuthUser(response?.data);
+    setAuthStatus("Welcome! 500 points worth ₹500 have been added to your membership.", "success");
     closeAuthModal();
-    toast("Account created. You are now signed in.");
+    toast("Welcome to Aaru’s Chalet — ₹500 in welcome points added.");
   } catch (error) {
-    setAuthStatus(error.message);
+    setAuthStatus(error.message, "error");
   }
 }
 
@@ -191,7 +196,7 @@ async function requestLoginOtp() {
     return;
   }
 
-  setAuthStatus("Creating OTP…");
+  setAuthStatus("Checking your Aaru’s Chalet membership…", "success");
   try {
     const response = await api("/api/v1/auth/otp/request", {
       method: "POST",
@@ -209,9 +214,11 @@ async function requestLoginOtp() {
       $("otpStatus").textContent =
         `OTP created for ${challenge?.maskedDestination || "your account"}. Enter the 6-digit code.`;
     }
-    setAuthStatus("");
+    setAuthStatus("OTP is ready. Enter the 6-digit code below.", "success");
   } catch (error) {
-    setAuthStatus(error.message);
+    $("otpPanel").hidden = true;
+    state.otpIdentifier = null;
+    setAuthStatus(error.message, "error");
   }
 }
 
@@ -222,7 +229,7 @@ async function verifyLoginOtp() {
     return;
   }
 
-  setAuthStatus("Verifying OTP…");
+  setAuthStatus("Verifying OTP…", "success");
   try {
     const response = await api("/api/v1/auth/otp/verify", {
       method: "POST",
@@ -233,16 +240,17 @@ async function verifyLoginOtp() {
     });
     setAuthUser(response?.data);
     $("otpPanel").hidden = true;
+    setAuthStatus("");
     closeAuthModal();
     toast("OTP verified. You are signed in.");
   } catch (error) {
-    setAuthStatus(error.message);
+    setAuthStatus(error.message, "error");
   }
 }
 
 function continueWithGoogle() {
   if (!state.googleEnabled) {
-    toast("Google sign-in is not configured on the server yet.");
+    setAuthStatus("Google sign-in is coming soon. Please use email/phone with password or OTP.", "error");
     return;
   }
   window.location.assign("/oauth2/authorization/google");

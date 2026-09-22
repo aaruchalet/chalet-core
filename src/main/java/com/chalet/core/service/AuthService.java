@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
   private static final int MAX_OTP_ATTEMPTS = 5;
+  private static final int WELCOME_REWARD_POINTS = 500;
 
   private final AuthAccountRepository authAccountRepository;
   private final AuthOtpRepository authOtpRepository;
@@ -70,13 +71,14 @@ public class AuthService {
     account.setPasswordHash(passwordEncoder.encode(request.password()));
     account.setAuthProvider("LOCAL");
     account.setEnabled(true);
+    account.setRewardPoints(WELCOME_REWARD_POINTS);
 
     return toResponse(authAccountRepository.save(account));
   }
 
   @Transactional(readOnly = true)
   public AuthResponse signIn(SignInRequest request) {
-    DbAuthAccount account = findEnabledAccount(request.identifier());
+    DbAuthAccount account = findEnabledAccountForPassword(request.identifier());
     if (account.getPasswordHash() == null
             || !passwordEncoder.matches(request.password(), account.getPasswordHash())) {
       throw new AuthenticationFailedException("Invalid email/phone or password.");
@@ -86,7 +88,7 @@ public class AuthService {
 
   @Transactional
   public OtpChallengeResponse requestOtp(OtpRequest request) {
-    DbAuthAccount account = findEnabledAccount(request.identifier());
+    DbAuthAccount account = findExistingMemberForOtp(request.identifier());
     String identifier = canonicalIdentifier(account, request.identifier());
     String code = String.format("%06d", secureRandom.nextInt(1_000_000));
 
@@ -193,6 +195,31 @@ public class AuthService {
     return toResponse(account);
   }
 
+  private DbAuthAccount findExistingMemberForOtp(String rawIdentifier) {
+    String identifier = normalizeIdentifier(rawIdentifier);
+    Optional<DbAuthAccount> account = identifier.contains("@")
+            ? authAccountRepository.findByEmailIgnoreCase(identifier)
+            : authAccountRepository.findByPhone(identifier);
+
+    return account
+            .filter(DbAuthAccount::isEnabled)
+            .orElseThrow(() -> new AuthenticationFailedException(
+                    "We couldn’t find an Aaru’s Chalet membership for that email or phone number. "
+                            + "If you’re new here, please sign up first."));
+  }
+
+  private DbAuthAccount findEnabledAccountForPassword(String rawIdentifier) {
+    String identifier = normalizeIdentifier(rawIdentifier);
+    Optional<DbAuthAccount> account = identifier.contains("@")
+            ? authAccountRepository.findByEmailIgnoreCase(identifier)
+            : authAccountRepository.findByPhone(identifier);
+
+    return account
+            .filter(DbAuthAccount::isEnabled)
+            .orElseThrow(() -> new AuthenticationFailedException(
+                    "Invalid email/phone or password."));
+  }
+
   private DbAuthAccount findEnabledAccount(String rawIdentifier) {
     String identifier = normalizeIdentifier(rawIdentifier);
     Optional<DbAuthAccount> account = identifier.contains("@")
@@ -264,7 +291,8 @@ public class AuthService {
             account.getEmail(),
             account.getPhone(),
             account.getLocation(),
-            account.getAuthProvider()
+            account.getAuthProvider(),
+            account.getRewardPoints()
     );
   }
 }

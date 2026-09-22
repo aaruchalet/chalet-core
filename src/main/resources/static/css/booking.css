@@ -198,3 +198,11 @@ button{cursor:pointer}
   .auth-modal{padding:24px 18px;border-radius:16px}
   .auth-form-grid{grid-template-columns:1fr}
 }
+
+.membership-rate-message{margin:10px 0 7px;padding:10px 12px;border-radius:9px;background:#eef5f2;color:var(--forest);font-size:11px;font-weight:800;text-align:center}
+.membership-reward-message{margin:0 0 14px;padding:10px 12px;border:1px solid #ead7a5;border-radius:9px;background:#fffaf0;color:#6a4d12;font-size:11px;font-weight:700;text-align:center}
+.auth-status{min-height:0;margin:9px 0 0;padding:0;font-size:11px;line-height:1.45;text-align:left;border-radius:8px}
+.auth-status:empty{display:none}
+.auth-status.error{display:block;padding:9px 11px;background:#fff2f1;border:1px solid #efcfcb;color:var(--danger)}
+.auth-status.success{display:block;padding:9px 11px;background:#eef8f3;border:1px solid #cce3d8;color:var(--forest)}
+.member-points{margin:12px 0 4px;padding:10px 12px;border-radius:9px;background:#fff8e8;border:1px solid #ead7a5;color:#6a4d12;font-size:11px;font-weight:800}
