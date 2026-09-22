@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d3b34">
+  <title>Aaru's Chalet | Book Your Stay</title>
+  <meta name="description" content="Book a stay at Aaru's Chalet. Browse room types, compare prices, and reserve your stay.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/booking.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Aaru's Chalet home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 44"><path d="M4 37 21 13l10 14L39 7l21 30H4Z"/><path d="m13 37 9-11 5 6 4-5 8 10" class="snow"/></svg>
+      </span>
+      <span class="brand-copy">
+        <strong>Aaru’s Chalet</strong>
+        <small>Stay Closer to Nature</small>
+      </span>
+    </a>
+
+    <nav class="main-nav" aria-label="Primary navigation">
+      <a class="active" href="#stays">Stays</a>
+      <a href="#experiences">Experiences</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="currency-button" type="button">INR ₹ <span>⌄</span></button>
+      <button class="icon-button" type="button" aria-label="Saved stays">♡</button>
+      <button class="sign-in-button" type="button"><span aria-hidden="true">♙</span> Sign in</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-shade"></div>
+      <div class="hero-content">
+        <p class="eyebrow">A quiet place above the ordinary</p>
+        <h1 id="hero-title">Unwind at Aaru’s Chalet</h1>
+        <p class="hero-copy">Beautiful stays. Deeper experiences. Closer to nature.</p>
+
+        <div class="hero-benefits">
+          <div><span>♜</span><p><strong>Scenic Locations</strong><small>Mountains, rivers & more</small></p></div>
+          <div><span>♡</span><p><strong>Comfortable Stays</strong><small>Designed for relaxation</small></p></div>
+          <div><span>⌁</span><p><strong>Memorable Experiences</strong><small>Create lasting memories</small></p></div>
+        </div>
+      </div>
+
+      <form class="search-bar" id="searchForm">
+        <label class="search-field destination-field">
+          <span class="field-icon">⌖</span>
+          <span class="field-copy">
+            <small>Destination</small>
+            <input id="destination" type="text" value="Manali, Himachal Pradesh" aria-label="Destination">
+          </span>
+        </label>
+
+        <label class="search-field">
+          <span class="field-icon">▣</span>
+          <span class="field-copy">
+            <small>Check-in</small>
+            <input id="checkIn" type="date" required>
+          </span>
+        </label>
+
+        <label class="search-field">
+          <span class="field-icon">▣</span>
+          <span class="field-copy">
+            <small>Check-out</small>
+            <input id="checkOut" type="date" required>
+          </span>
+        </label>
+
+        <label class="search-field guest-field">
+          <span class="field-icon">♙</span>
+          <span class="field-copy">
+            <small>Guests</small>
+            <select id="guests" aria-label="Guests">
+              <option value="1">1 Adult</option>
+              <option value="2" selected>2 Adults</option>
+              <option value="3">2 Adults, 1 Child</option>
+              <option value="4">3 Adults, 1 Child</option>
+              <option value="5">4 Guests</option>
+            </select>
+          </span>
+        </label>
+
+        <button class="search-button" type="submit"><span>⌕</span> Search Stays</button>
+      </form>
+    </section>
+
+    <section class="content-section" id="stays">
+      <div class="results-heading">
+        <div>
+          <h2>Available Stays</h2>
+          <p id="availabilitySummary">Select your dates to see available stays.</p>
+        </div>
+        <label class="sort-control">
+          <span>Sort by</span>
+          <select id="sortSelect">
+            <option value="recommended">Recommended</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="results-layout">
+        <aside class="filters-card" aria-label="Filters">
+          <div class="filters-title-row">
+            <h3>Filters</h3>
+            <button id="clearFilters" type="button">Clear all</button>
+          </div>
+
+          <div class="filter-group">
+            <h4>Price per night (₹)</h4>
+            <input id="priceRange" type="range" min="1000" max="50000" step="500" value="50000">
+            <div class="range-labels"><span>₹1,000</span><span id="priceRangeValue">₹50,000+</span></div>
+          </div>
+
+          <div class="filter-group">
+            <h4>Property Type</h4>
+            <label><input class="type-filter" type="checkbox" value="chalet" checked> Chalet</label>
+            <label><input class="type-filter" type="checkbox" value="room"> Room</label>
+            <label><input class="type-filter" type="checkbox" value="suite"> Suite</label>
+            <label><input class="type-filter" type="checkbox" value="villa"> Villa</label>
+            <label><input class="type-filter" type="checkbox" value="cottage"> Cottage</label>
+          </div>
+
+          <div class="filter-group">
+            <h4>Amenities</h4>
+            <label><input type="checkbox" checked disabled> Free Wi-Fi</label>
+            <label><input type="checkbox" checked disabled> Breakfast Included</label>
+            <label><input type="checkbox" checked disabled> Mountain View</label>
+            <label><input type="checkbox" disabled> Balcony</label>
+            <label><input type="checkbox" disabled> Heater</label>
+            <label><input type="checkbox" disabled> Parking</label>
+          </div>
+        </aside>
+
+        <section class="stay-list" id="roomList" aria-live="polite">
+          <article class="loading-card">Loading room types from Chalet Core…</article>
+        </section>
+
+        <aside class="booking-card">
+          <h3>Your Booking</h3>
+          <div class="booking-image" id="summaryImage"></div>
+          <h4 id="summaryRoomName">Choose a stay</h4>
+          <p class="summary-rate"><strong id="summaryRate">—</strong> <span>per night</span></p>
+
+          <div class="booking-meta">
+            <div><span>▣</span><p id="summaryDates">Select check-in and check-out</p><small id="summaryNights">—</small></div>
+            <div><span>♙</span><p id="summaryGuests">2 Adults</p></div>
+          </div>
+
+          <div class="price-breakdown">
+            <div><span>Room Amount</span><strong id="roomAmount">—</strong></div>
+            <div><span>Estimated Taxes & Fees (12%)</span><strong id="taxAmount">—</strong></div>
+            <div class="total-row"><span>Total Amount</span><strong id="totalAmount">—</strong></div>
+          </div>
+
+          <button class="continue-button" id="continueButton" type="button" disabled>Continue to Book</button>
+          <p class="secure-note">▣ Secure booking · No hidden charges</p>
+
+          <div class="hold-panel" id="holdPanel" hidden>
+            <small>Room held for</small>
+            <strong id="holdTimer">10:00</strong>
+            <p>Confirm before the hold expires.</p>
+            <button class="confirm-button" id="confirmButton" type="button">Confirm Booking</button>
+            <button class="cancel-button" id="cancelButton" type="button">Cancel Hold</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="trust-strip">
+      <div><span>◇</span><p><strong>Best Price Guarantee</strong><small>Get the best rates, always</small></p></div>
+      <div><span>▣</span><p><strong>Secure Booking</strong><small>Protected booking flow</small></p></div>
+      <div><span>◷</span><p><strong>Flexible Planning</strong><small>Simple cancellation flow</small></p></div>
+      <div><span>☏</span><p><strong>Guest Support</strong><small>We’re here to help</small></p></div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="guestModal" hidden>
+    <section class="guest-modal" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle">
+      <button class="modal-close" id="modalClose" type="button" aria-label="Close">×</button>
+      <p class="modal-kicker">Almost there</p>
+      <h2 id="guestModalTitle">Guest details</h2>
+      <p class="modal-intro">Find an existing guest by email or phone, or create a new guest profile before placing the 10-minute hold.</p>
+
+      <div class="lookup-tabs">
+        <button class="lookup-tab active" data-mode="email" type="button">Email</button>
+        <button class="lookup-tab" data-mode="phone" type="button">Phone</button>
+      </div>
+      <div class="lookup-row">
+        <input id="lookupValue" type="email" placeholder="guest@example.com">
+        <button id="lookupButton" type="button">Find Guest</button>
+      </div>
+      <p class="lookup-status" id="lookupStatus"></p>
+
+      <div class="divider"><span>or create guest</span></div>
+
+      <form id="guestForm">
+        <div class="modal-grid">
+          <label><span>Name</span><input id="guestName" required placeholder="Full name"></label>
+          <label><span>Email</span><input id="guestEmail" type="email" required placeholder="guest@example.com"></label>
+          <label><span>Phone</span><input id="guestPhone" inputmode="numeric" maxlength="10" required placeholder="10-digit number"></label>
+          <label><span>Member</span><select id="guestMember"><option value="false">No</option><option value="true">Yes</option></select></label>
+        </div>
+        <label class="full-field"><span>Address</span><input id="guestAddress" placeholder="City, state"></label>
+        <button class="modal-primary" type="submit">Create Guest & Hold Room</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/js/booking.js" defer></script>
+</body>
+</html>
