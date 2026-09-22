@@ -434,6 +434,12 @@ async function lookupGuest() {
   }
 }
 
+async function linkCurrentMemberCustomer(customerId) {
+  if (!state.authUser || state.authUser.customerId) return;
+  const response = await api(`/api/v1/auth/customer/${customerId}`, { method: "POST" });
+  setAuthUser(response?.data);
+}
+
 async function createGuest() {
   const phone = $("guestPhone").value.trim();
   if (!/^\d{10}$/.test(phone)) throw new Error("Phone number must be exactly 10 digits.");
@@ -449,6 +455,7 @@ async function createGuest() {
     body: JSON.stringify(payload)
   });
   if (!response?.data?.id) throw new Error("Customer creation did not return an ID.");
+  await linkCurrentMemberCustomer(response.data.id);
   return response.data.id;
 }
 
@@ -640,6 +647,7 @@ $("guestForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
     const customerId = state.customerId || await createGuest();
+    await linkCurrentMemberCustomer(customerId);
     await createHold(customerId);
   } catch (error) {
     toast(error.message);
