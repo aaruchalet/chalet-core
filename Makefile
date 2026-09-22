@@ -139,8 +139,9 @@ clean:
 build:
 	./gradlew clean build
 
-run-dev:
-	./gradlew bootRun --args='--spring.profiles.active=dev'
+run-dev: mysql-up
+	@echo "Starting Chalet Core with deterministic local datasource settings..."
+	./gradlew bootRun --args='--spring.profiles.active=dev --spring.datasource.url=jdbc:mysql://localhost:2211/chalet_db --spring.datasource.username=chalet_app --spring.datasource.password=chalet_app_dev'
 
 run-qa:
 	./gradlew bootRun --args='--spring.profiles.active=qa'
