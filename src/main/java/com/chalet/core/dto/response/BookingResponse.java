@@ -9,6 +9,8 @@ public record BookingResponse(
         Long roomId,
         LocalDate checkInDate,
         LocalDate checkOutDate,
+        int adults,
+        Integer childAge,
         BookingStatus bookingStatus
 ) {
 }
