@@ -12,6 +12,7 @@ services:
     ports:
       - "8081:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: default
       SPRING_DATASOURCE_URL: jdbc:mysql://chalet-db:3306/chalet_db
       SPRING_DATASOURCE_USERNAME: ${CHALET_DB_APP_USER:-chalet_app}
       SPRING_DATASOURCE_PASSWORD: ${CHALET_DB_APP_PASSWORD:-chalet_app_dev}

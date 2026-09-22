@@ -80,7 +80,7 @@ Start the local MySQL database:
 make mysql-up
 ```
 
-The development profile uses these defaults automatically:
+Local runs default to the `dev` profile and use these fixed local values:
 
 ```text
 Database: chalet_db
@@ -91,15 +91,9 @@ Password: chalet_app_dev
 JDBC URL: jdbc:mysql://localhost:2211/chalet_db
 ```
 
-You do not need to export datasource variables for normal local development. If needed, they can still be overridden with:
+The `dev` profile intentionally does not read `SPRING_DATASOURCE_*` environment variables. This prevents stale IDE or shell variables from overriding the local JDBC configuration.
 
-```bash
-export SPRING_DATASOURCE_URL='jdbc:mysql://localhost:2211/chalet_db'
-export SPRING_DATASOURCE_USERNAME='chalet_app'
-export SPRING_DATASOURCE_PASSWORD='chalet_app_dev'
-```
-
-The datasource URL must be a valid JDBC URL and must start with `jdbc:mysql://`.
+Docker Compose and Kubernetes use explicit non-dev profiles and continue to receive their datasource settings from container/Kubernetes environment configuration.
 
 ## Run locally
 
