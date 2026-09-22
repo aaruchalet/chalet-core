@@ -12,6 +12,7 @@ import com.chalet.core.entity.DbBooking;
 import com.chalet.core.entity.DbCustomer;
 import com.chalet.core.entity.DbRoom;
 import com.chalet.core.enums.BookingStatus;
+import com.chalet.core.enums.MealPlan;
 import com.chalet.core.exception.ResourceNotFoundException;
 import com.chalet.core.exception.RoomAlreadyBookedException;
 import com.chalet.core.mapper.BookingMapper;
@@ -211,6 +212,7 @@ class BookingServiceImplTest {
             LocalDate.of(2026, 10, 2),
             2,
             null,
+            MealPlan.ROOM_ONLY,
             status);
   }
 }
