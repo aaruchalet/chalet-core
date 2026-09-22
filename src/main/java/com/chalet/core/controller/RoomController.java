@@ -35,7 +35,7 @@ public class RoomController {
   }
 
   @GetMapping("/availability")
-  public ResponseEntity<ApiResponse<List<RoomAvailabilityResponse>>> findAvailability(
+  public ResponseEntity<ApiResponse<?>> findAvailability(
           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut) {
     if (!checkOut.isAfter(checkIn)) {
