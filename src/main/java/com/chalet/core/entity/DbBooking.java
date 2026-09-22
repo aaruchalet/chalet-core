@@ -71,6 +71,12 @@ public class DbBooking {
   @Column(name = "check_out_date", nullable = false)
   private LocalDate checkOutDate;
 
+  @Column(name = "adults", nullable = false)
+  private int adults = 2;
+
+  @Column(name = "child_age")
+  private Integer childAge;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "booking_status", nullable = false)
   private BookingStatus bookingStatus;
