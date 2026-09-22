@@ -163,6 +163,28 @@ public class AuthService {
     return toResponse(authAccountRepository.save(account));
   }
 
+  @Transactional
+  public AuthResponse linkCustomer(Long accountId, Long customerId) {
+    DbAuthAccount account = authAccountRepository.findById(accountId)
+            .filter(DbAuthAccount::isEnabled)
+            .orElseThrow(() -> new AuthenticationFailedException("Session is no longer valid."));
+
+    DbCustomer customer = customerRepository.findById(customerId)
+            .orElseThrow(() -> new AuthenticationFailedException("Guest profile was not found."));
+
+    if (!account.getEmail().equalsIgnoreCase(customer.getEmail())) {
+      throw new AuthenticationFailedException(
+              "The guest profile email must match the signed-in member email.");
+    }
+
+    account.setCustomerId(customer.getId());
+    if ((account.getLocation() == null || account.getLocation().isBlank())
+            && customer.getAddress() != null) {
+      account.setLocation(customer.getAddress());
+    }
+    return toResponse(authAccountRepository.save(account));
+  }
+
   @Transactional(readOnly = true)
   public AuthResponse findById(Long accountId) {
     DbAuthAccount account = authAccountRepository.findById(accountId)
