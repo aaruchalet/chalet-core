@@ -162,3 +162,39 @@ button{cursor:pointer}
 @media(max-width:480px){
   .stay-card{grid-template-columns:1fr}.stay-image{height:180px}.stay-price{grid-column:auto}.results-heading{display:grid}.sort-control{justify-content:space-between}.trust-strip{grid-template-columns:1fr}
 }
+
+.auth-modal{width:min(560px,100%);max-height:min(90vh,760px);overflow:auto;background:#fff;border-radius:20px;padding:30px;box-shadow:0 28px 90px rgba(0,0,0,.3);position:relative}
+.auth-modal h2{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:38px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:#f0f4f2;border-radius:10px;padding:4px;margin-bottom:14px}
+.auth-tab{border:0;background:transparent;border-radius:8px;padding:10px;font-weight:800;color:#71807a}
+.auth-tab.active{background:#fff;color:var(--forest);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.google-auth-button{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid #d4dcd8;background:#fff;border-radius:9px;padding:12px 14px;font-weight:800;color:#25312c}
+.google-auth-button:disabled{opacity:.5;cursor:not-allowed}
+.google-mark{width:19px;height:19px;flex:0 0 auto}
+.google-config-note{margin:8px 0 0;text-align:center;font-size:10px;color:#8a6556}
+.auth-form{display:grid;gap:12px}
+.auth-form label{display:grid;gap:6px;font-size:10px;font-weight:800;color:#485650}
+.auth-form input{border:1px solid #cfd9d5;border-radius:8px;padding:12px;outline:0;width:100%}
+.auth-form input:focus,.otp-row input:focus{border-color:#6da393;box-shadow:0 0 0 3px rgba(39,104,91,.08)}
+.auth-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.auth-or{display:flex;align-items:center;gap:10px;color:#89938f;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin:15px 0 10px}
+.auth-or:before,.auth-or:after{content:"";height:1px;background:#e7ece9;flex:1}
+.auth-secondary{width:100%;border:1px solid #c9d7d1;border-radius:8px;padding:11px 12px;background:#f7faf9;color:var(--forest);font-weight:800}
+.auth-switch-copy{text-align:center;margin:15px 0 0;color:#66736e;font-size:11px}
+.auth-link{border:0;background:transparent;color:var(--forest-2);font-weight:800;padding:0}
+.otp-panel{margin-top:12px;border:1px solid #d8e5df;background:#f5faf8;border-radius:10px;padding:12px}
+.otp-panel p{font-size:10px;color:#5f6e68;margin:0 0 8px}
+.otp-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.otp-row input{border:1px solid #cfd9d5;border-radius:8px;padding:11px 12px;outline:0;letter-spacing:.16em}
+.otp-row button{border:0;border-radius:8px;padding:0 16px;background:var(--forest);color:#fff;font-weight:800}
+.auth-status{min-height:16px;margin:12px 0 0;font-size:10px;color:var(--forest-2);text-align:center}
+.signed-in-panel{text-align:center;padding:10px 4px 2px}
+.member-avatar{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--forest);font-family:"Cormorant Garamond",Georgia,serif;font-size:30px;font-weight:700}
+.signed-in-panel .modal-primary{margin-top:6px}
+.signed-in-panel .auth-secondary{margin-top:10px}
+.danger-outline{color:var(--danger);border-color:#e2cbc8;background:#fff}
+.sign-in-button.authenticated{background:#eef5f2;border-radius:9px;color:var(--forest)}
+@media(max-width:600px){
+  .auth-modal{padding:24px 18px;border-radius:16px}
+  .auth-form-grid{grid-template-columns:1fr}
+}
