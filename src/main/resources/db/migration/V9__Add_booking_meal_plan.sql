@@ -1,0 +1,2 @@
+ALTER TABLE booking
+    ADD COLUMN meal_plan VARCHAR(30) NOT NULL DEFAULT 'ROOM_ONLY' AFTER child_age;
