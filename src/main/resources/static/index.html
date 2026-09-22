@@ -111,9 +111,12 @@
             <div class="guest-room-list" id="guestRoomList"></div>
             <div class="child-policy">
               <strong>Child policy</strong>
-              <span>Under 2 years: free · Ages 2–11: 50% of adult rate when an extra bed is required · Age 12+: counted as an adult.</span>
+              <span>Ages 0–3: free · Ages 4–11: extra bed at 50% of adult room rate · Age 12+: counted as an adult.</span>
             </div>
-            <button class="guest-apply-button" id="guestApplyButton" type="button">Apply guests</button>
+            <div class="guest-selector-actions">
+              <button class="add-room-button" id="addRoomButton" type="button">+ Add another room</button>
+              <button class="guest-apply-button" id="guestApplyButton" type="button">Apply guests</button>
+            </div>
           </div>
         </div>
 
@@ -174,6 +177,9 @@
           <div class="price-breakdown">
             <div><span>Room Amount</span><strong id="roomAmount">—</strong></div>
             <div id="childSupplementRow" hidden><span>Child Extra-bed Supplement</span><strong id="childSupplementAmount">—</strong></div>
+            <div><span>Meal plan</span><strong id="mealPlanSummary">Room only</strong></div>
+            <div id="breakfastChargeRow" hidden><span>Breakfast (₹350/person/night)</span><strong id="breakfastChargeAmount">—</strong></div>
+            <div id="dinnerNoticeRow" hidden><span>Dinner</span><strong>Price to be configured</strong></div>
             <div><span>Estimated Taxes & Fees (12%)</span><strong id="taxAmount">—</strong></div>
             <div class="total-row"><span>Total Amount</span><strong id="totalAmount">—</strong></div>
           </div>
@@ -416,6 +422,18 @@
         <div class="room-amenities-block">
           <h3>Included amenities</h3>
           <div class="room-amenities-grid" id="roomDetailsAmenities"></div>
+        </div>
+        <div class="meal-plan-block">
+          <div>
+            <h3>Choose your meal plan</h3>
+            <p>Room only is selected by default. Breakfast is ₹350 per person per night. Dinner-inclusive plans are available to choose now; dinner pricing is not yet configured.</p>
+          </div>
+          <div class="meal-plan-options" id="mealPlanOptions">
+            <label><input type="radio" name="mealPlan" value="ROOM_ONLY" checked><span><strong>Room only</strong><small>No breakfast or dinner included</small></span></label>
+            <label><input type="radio" name="mealPlan" value="BREAKFAST_ONLY"><span><strong>Breakfast only</strong><small>Breakfast included · +₹350 per person/night</small></span></label>
+            <label><input type="radio" name="mealPlan" value="DINNER_ONLY"><span><strong>Dinner only</strong><small>Breakfast not included · dinner included</small></span></label>
+            <label><input type="radio" name="mealPlan" value="BREAKFAST_DINNER"><span><strong>Breakfast + dinner</strong><small>Breakfast +₹350 per person/night · dinner included</small></span></label>
+          </div>
         </div>
         <div class="room-details-actions">
           <button class="room-details-select" id="roomDetailsSelect" type="button">Select this room</button>
