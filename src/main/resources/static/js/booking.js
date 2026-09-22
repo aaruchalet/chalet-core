@@ -533,19 +533,20 @@ async function createGuest() {
 
 async function createHold(customerId) {
   validateStay();
-  const payload = {
-    customerId,
-    roomTypeId: state.selectedRoom.id,
-    checkInDate: $("checkIn").value,
-    checkOutDate: $("checkOut").value
-  };
-
   const created = [];
   try {
     for (let i = 0; i < state.guestRooms.length; i += 1) {
+      const roomGuests = state.guestRooms[i];
       const booking = await api("/api/v1/bookings", {
         method: "POST",
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          customerId,
+          roomTypeId: state.selectedRoom.id,
+          checkInDate: $("checkIn").value,
+          checkOutDate: $("checkOut").value,
+          adults: Number(roomGuests.adults),
+          childAge: roomGuests.childAge === null || roomGuests.childAge === "" ? null : Number(roomGuests.childAge)
+        })
       });
       if (!booking?.id) throw new Error("Booking was created but no booking ID was returned.");
       created.push(booking.id);
