@@ -32,4 +32,25 @@ public interface RoomRepository extends JpaRepository<DbRoom, Long> {
           @Param("checkIn") LocalDate checkIn,
           @Param("checkOut") LocalDate checkOut,
           @Param("currentTime") LocalDateTime currentTime);
+
+  @Query(value = """
+          SELECT COUNT(*)
+            FROM room r
+           WHERE r.room_type_id = :roomTypeId
+             AND r.room_status = 'AVAILABLE'
+             AND NOT EXISTS (
+                 SELECT 1
+                   FROM booking b
+                  WHERE b.room_id = r.id
+                    AND b.check_in_date < :checkOut
+                    AND b.check_out_date > :checkIn
+                    AND (b.booking_status = 'CONFIRMED'
+                         OR (b.booking_status = 'HELD' AND b.hold_expiry > :currentTime))
+             )
+          """, nativeQuery = true)
+  long countAvailableRoomsForBooking(
+          @Param("roomTypeId") Long roomTypeId,
+          @Param("checkIn") LocalDate checkIn,
+          @Param("checkOut") LocalDate checkOut,
+          @Param("currentTime") LocalDateTime currentTime);
 }
