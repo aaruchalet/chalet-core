@@ -7,6 +7,10 @@ const state = {
   bookingId: null,
   holdSeconds: 600,
   holdInterval: null,
+  authUser: null,
+  googleEnabled: false,
+  authMode: "signin",
+  otpIdentifier: null,
 };
 
 const fallbackRooms = [
@@ -34,6 +38,7 @@ function defaultDates() {
 
 async function api(url, options = {}) {
   const response = await fetch(url, {
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
     ...options
   });
@@ -41,12 +46,246 @@ async function api(url, options = {}) {
   let body = null;
   try { body = text ? JSON.parse(text) : null; } catch { body = text; }
   if (!response.ok) {
-    const message = body?.error && typeof body.error === "string"
-      ? body.error
-      : body?.message || (typeof body === "string" ? body : `Request failed (${response.status})`);
+    let message;
+    if (body?.error && typeof body.error === "string") {
+      message = body.error;
+    } else if (body?.error && typeof body.error === "object") {
+      message = Object.values(body.error).join(" ");
+    } else {
+      message = body?.message || (typeof body === "string" ? body : `Request failed (${response.status})`);
+    }
     throw new Error(message);
   }
   return body;
+}
+
+
+function setAuthStatus(message = "") {
+  $("authStatus").textContent = message;
+}
+
+function setAuthMode(mode) {
+  state.authMode = mode;
+  document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.authMode === mode);
+  });
+  $("signInPane").hidden = mode !== "signin";
+  $("signUpPane").hidden = mode !== "signup";
+  $("authModalTitle").textContent = mode === "signin" ? "Welcome back" : "Create your account";
+  $("authModalIntro").textContent = mode === "signin"
+    ? "Sign in as an existing guest or member using your password or a one-time OTP."
+    : "Join Aaru’s Chalet with your basic details, or continue with Google.";
+  setAuthStatus("");
+}
+
+function renderAuthState() {
+  const user = state.authUser;
+  $("authSignedOut").hidden = Boolean(user);
+  $("authSignedIn").hidden = !user;
+
+  if (!user) {
+    $("signInLabel").textContent = "Sign in";
+    $("signInButton").classList.remove("authenticated");
+    return;
+  }
+
+  const firstName = (user.name || "Member").trim().split(/\s+/)[0];
+  $("signInLabel").textContent = `Hi, ${firstName}`;
+  $("signInButton").classList.add("authenticated");
+  $("memberAvatar").textContent = firstName.charAt(0).toUpperCase() || "A";
+  $("signedInName").textContent = user.name || "Aaru’s Chalet member";
+  $("signedInDetails").textContent = [user.email, user.phone, user.location]
+    .filter(Boolean)
+    .join(" • ");
+}
+
+function setAuthUser(user) {
+  state.authUser = user || null;
+  state.customerId = user?.customerId || null;
+  renderAuthState();
+}
+
+function openAuthModal(mode = "signin") {
+  if (!state.authUser) setAuthMode(mode);
+  renderAuthState();
+  $("authModal").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeAuthModal() {
+  $("authModal").hidden = true;
+  document.body.style.overflow = "";
+}
+
+async function loadAuthConfig() {
+  try {
+    const response = await api("/api/v1/auth/config");
+    state.googleEnabled = Boolean(response?.data?.googleEnabled);
+  } catch {
+    state.googleEnabled = false;
+  }
+  $("googleAuthButton").disabled = !state.googleEnabled;
+  $("googleConfigNote").hidden = state.googleEnabled;
+}
+
+async function loadAuthState() {
+  try {
+    const response = await api("/api/v1/auth/me");
+    setAuthUser(response?.data || null);
+  } catch {
+    setAuthUser(null);
+  }
+}
+
+async function signInMember(event) {
+  event.preventDefault();
+  setAuthStatus("Signing in…");
+  try {
+    const response = await api("/api/v1/auth/signin", {
+      method: "POST",
+      body: JSON.stringify({
+        identifier: $("signInIdentifier").value.trim(),
+        password: $("signInPassword").value
+      })
+    });
+    setAuthUser(response?.data);
+    closeAuthModal();
+    toast("Signed in successfully.");
+  } catch (error) {
+    setAuthStatus(error.message);
+  }
+}
+
+async function signUpMember(event) {
+  event.preventDefault();
+  const phone = $("signUpPhone").value.trim();
+  if (!/^\d{10}$/.test(phone)) {
+    setAuthStatus("Phone number must be exactly 10 digits.");
+    return;
+  }
+
+  setAuthStatus("Creating your account…");
+  try {
+    const response = await api("/api/v1/auth/signup", {
+      method: "POST",
+      body: JSON.stringify({
+        name: $("signUpName").value.trim(),
+        email: $("signUpEmail").value.trim(),
+        phone,
+        password: $("signUpPassword").value,
+        location: $("signUpLocation").value.trim()
+      })
+    });
+    setAuthUser(response?.data);
+    closeAuthModal();
+    toast("Account created. You are now signed in.");
+  } catch (error) {
+    setAuthStatus(error.message);
+  }
+}
+
+async function requestLoginOtp() {
+  const identifier = $("signInIdentifier").value.trim();
+  if (!identifier) {
+    setAuthStatus("Enter your email or phone number first.");
+    return;
+  }
+
+  setAuthStatus("Creating OTP…");
+  try {
+    const response = await api("/api/v1/auth/otp/request", {
+      method: "POST",
+      body: JSON.stringify({ identifier })
+    });
+    state.otpIdentifier = identifier;
+    $("otpPanel").hidden = false;
+
+    const challenge = response?.data;
+    if (challenge?.devOtp) {
+      $("otpCode").value = challenge.devOtp;
+      $("otpStatus").textContent =
+        `Local development OTP: ${challenge.devOtp} · expires in ${challenge.expiresInSeconds} seconds.`;
+    } else {
+      $("otpStatus").textContent =
+        `OTP created for ${challenge?.maskedDestination || "your account"}. Enter the 6-digit code.`;
+    }
+    setAuthStatus("");
+  } catch (error) {
+    setAuthStatus(error.message);
+  }
+}
+
+async function verifyLoginOtp() {
+  const code = $("otpCode").value.trim();
+  if (!/^\d{6}$/.test(code)) {
+    setAuthStatus("Enter the 6-digit OTP.");
+    return;
+  }
+
+  setAuthStatus("Verifying OTP…");
+  try {
+    const response = await api("/api/v1/auth/otp/verify", {
+      method: "POST",
+      body: JSON.stringify({
+        identifier: state.otpIdentifier || $("signInIdentifier").value.trim(),
+        code
+      })
+    });
+    setAuthUser(response?.data);
+    $("otpPanel").hidden = true;
+    closeAuthModal();
+    toast("OTP verified. You are signed in.");
+  } catch (error) {
+    setAuthStatus(error.message);
+  }
+}
+
+function continueWithGoogle() {
+  if (!state.googleEnabled) {
+    toast("Google sign-in is not configured on the server yet.");
+    return;
+  }
+  window.location.assign("/oauth2/authorization/google");
+}
+
+async function signOutMember() {
+  try {
+    await api("/api/v1/auth/logout", { method: "POST" });
+  } catch {
+    // Clear the local UI state even if the session has already expired.
+  }
+  setAuthUser(null);
+  closeAuthModal();
+  toast("Signed out.");
+}
+
+function prefillGuestFromAuth() {
+  const user = state.authUser;
+  if (!user) return;
+  $("guestName").value = user.name || "";
+  $("guestEmail").value = user.email || "";
+  $("guestPhone").value = user.phone || "";
+  $("guestAddress").value = user.location || "";
+  $("guestMember").value = "true";
+}
+
+async function initAuthentication() {
+  await Promise.all([loadAuthConfig(), loadAuthState()]);
+
+  const params = new URLSearchParams(window.location.search);
+  const authResult = params.get("auth");
+  if (authResult === "google-success") {
+    await loadAuthState();
+    toast("Signed in with Google.");
+  } else if (authResult === "google-error") {
+    toast("Google sign-in could not be completed.");
+  }
+
+  if (authResult) {
+    params.delete("auth");
+    const query = params.toString();
+    history.replaceState({}, "", window.location.pathname + (query ? `?${query}` : "") + window.location.hash);
+  }
 }
 
 async function loadRoomTypes() {
@@ -195,6 +434,12 @@ async function lookupGuest() {
   }
 }
 
+async function linkCurrentMemberCustomer(customerId) {
+  if (!state.authUser || state.authUser.customerId) return;
+  const response = await api(`/api/v1/auth/customer/${customerId}`, { method: "POST" });
+  setAuthUser(response?.data);
+}
+
 async function createGuest() {
   const phone = $("guestPhone").value.trim();
   if (!/^\d{10}$/.test(phone)) throw new Error("Phone number must be exactly 10 digits.");
@@ -210,6 +455,7 @@ async function createGuest() {
     body: JSON.stringify(payload)
   });
   if (!response?.data?.id) throw new Error("Customer creation did not return an ID.");
+  await linkCurrentMemberCustomer(response.data.id);
   return response.data.id;
 }
 
@@ -303,6 +549,25 @@ function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
 }
 
+
+$("signInButton").addEventListener("click", () => openAuthModal("signin"));
+$("authModalClose").addEventListener("click", closeAuthModal);
+$("authDoneButton").addEventListener("click", closeAuthModal);
+$("authModal").addEventListener("click", (event) => {
+  if (event.target === $("authModal")) closeAuthModal();
+});
+document.querySelectorAll("[data-auth-mode]").forEach((button) => {
+  button.addEventListener("click", () => setAuthMode(button.dataset.authMode));
+});
+$("openSignUp").addEventListener("click", () => setAuthMode("signup"));
+$("openSignIn").addEventListener("click", () => setAuthMode("signin"));
+$("googleAuthButton").addEventListener("click", continueWithGoogle);
+$("signInForm").addEventListener("submit", signInMember);
+$("signUpForm").addEventListener("submit", signUpMember);
+$("otpRequestButton").addEventListener("click", requestLoginOtp);
+$("otpVerifyButton").addEventListener("click", verifyLoginOtp);
+$("logoutButton").addEventListener("click", signOutMember);
+
 $("searchForm").addEventListener("submit", (event) => {
   event.preventDefault();
   try {
@@ -339,9 +604,16 @@ $("clearFilters").addEventListener("click", () => {
   renderRooms();
 });
 
-$("continueButton").addEventListener("click", () => {
+$("continueButton").addEventListener("click", async () => {
   try {
     validateStay();
+
+    if (state.authUser?.customerId) {
+      await createHold(state.authUser.customerId);
+      return;
+    }
+
+    prefillGuestFromAuth();
     $("guestModal").hidden = false;
     document.body.style.overflow = "hidden";
   } catch (error) {
@@ -375,6 +647,7 @@ $("guestForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
     const customerId = state.customerId || await createGuest();
+    await linkCurrentMemberCustomer(customerId);
     await createHold(customerId);
   } catch (error) {
     toast(error.message);
@@ -385,6 +658,7 @@ $("confirmButton").addEventListener("click", confirmBooking);
 $("cancelButton").addEventListener("click", cancelBooking);
 
 defaultDates();
+initAuthentication();
 loadRoomTypes().then(() => {
   if (state.roomTypes.length) selectRoom(state.roomTypes[0].id);
   updateSummary();

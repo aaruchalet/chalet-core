@@ -36,6 +36,9 @@ management:
 chalet:
   booking:
     hold-duration: 10m
+  auth:
+    otp-expiry: 5m
+    expose-dev-otp: false
 
 server:
   port: 8080
