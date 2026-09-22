@@ -156,6 +156,7 @@ function setAuthUser(user) {
   state.customerId = user?.customerId || null;
   renderAuthState();
   renderProfile();
+  updateSummary();
   if (!user) {
     $("accountMenu").hidden = true;
     $("signInButton").setAttribute("aria-expanded", "false");
