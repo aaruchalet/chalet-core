@@ -109,10 +109,12 @@ Run the application with the development profile:
 make run-dev
 ```
 
+`make run-dev` starts the local MySQL container first and then launches Spring Boot with explicit local datasource arguments. These command-line arguments take precedence over stale `SPRING_DATASOURCE_*` environment variables, so an old invalid datasource URL cannot break normal local startup.
+
 Equivalent Gradle command:
 
 ```bash
-./gradlew bootRun --args='--spring.profiles.active=dev'
+./gradlew bootRun --args='--spring.profiles.active=dev --spring.datasource.url=jdbc:mysql://localhost:2211/chalet_db --spring.datasource.username=chalet_app --spring.datasource.password=chalet_app_dev'
 ```
 
 Application:
@@ -133,10 +135,9 @@ Health endpoint:
 http://localhost:8080/actuator/health
 ```
 
-For a full local startup from a clean terminal:
+For a full local startup from a clean terminal, one command is enough:
 
 ```bash
-make mysql-up
 make run-dev
 ```
 
