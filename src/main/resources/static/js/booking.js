@@ -372,8 +372,18 @@ function availableRoomCount(roomId) {
 }
 
 function roomCanSatisfySelection(roomId) {
+  if (!state.availabilityLoaded) return false;
   const available = availableRoomCount(roomId);
-  return available === null || available >= state.guestRooms.length;
+  return available !== null && available >= state.guestRooms.length;
+}
+
+function invalidateAvailability() {
+  state.availabilityLoaded = false;
+  state.availabilityByRoomType = {};
+  state.selectedRoom = null;
+  state.selectedImage = null;
+  renderRooms();
+  updateSummary();
 }
 
 function availabilityLabel(roomId) {
@@ -439,14 +449,16 @@ function renderRooms() {
 
   $("roomList").innerHTML = rooms.map((room, index) => {
     const available = availableRoomCount(room.id);
-    const canBook = roomCanSatisfySelection(room.id);
+    const availabilityChecked = state.availabilityLoaded;
+    const canBook = availabilityChecked && roomCanSatisfySelection(room.id);
+    const soldOut = availabilityChecked && !canBook;
     const availability = availabilityLabel(room.id);
     return `
-    <article class="stay-card ${state.selectedRoom?.id === room.id ? "selected" : ""} ${canBook ? "" : "sold-out"}" data-id="${room.id}">
+    <article class="stay-card ${state.selectedRoom?.id === room.id ? "selected" : ""} ${soldOut ? "sold-out" : ""}" data-id="${room.id}">
       <div class="stay-image" style="background-image:url('${room.image}')">
-        ${room.popular && canBook ? '<span class="popular-badge">♛ Guest Favourite</span>' : ""}
+        ${room.popular && !soldOut ? '<span class="popular-badge">♛ Guest Favourite</span>' : ""}
         ${state.selectedRoom?.id === room.id ? '<span class="selected-badge">Selected</span>' : ""}
-        ${!canBook ? '<span class="sold-out-badge">Sold out</span>' : availability ? `<span class="availability-badge">${escapeHtml(availability)}</span>` : ""}
+        ${soldOut ? '<span class="sold-out-badge">Sold out</span>' : availability ? `<span class="availability-badge">${escapeHtml(availability)}</span>` : !availabilityChecked ? '<span class="availability-badge">Check availability</span>' : ""}
       </div>
       <div class="stay-body">
         <h3>${escapeHtml(room.typeName)}</h3>
@@ -460,10 +472,10 @@ function renderRooms() {
         <div class="room-card-actions">
           <button class="view-details-button" type="button" data-room-details="${room.id}">View details</button>
           <button class="select-stay-button ${state.selectedRoom?.id === room.id ? "selected" : ""}" type="button" data-select-room="${room.id}" ${canBook ? "" : "disabled"}>
-            ${!canBook ? "Sold out" : state.selectedRoom?.id === room.id ? "Selected" : "Select room"}
+            ${!availabilityChecked ? "Search dates first" : soldOut ? "Sold out" : state.selectedRoom?.id === room.id ? "Selected" : "Select room"}
           </button>
         </div>
-        ${!canBook ? `<small class="sold-out-copy">Unavailable for ${escapeHtml(prettyDate($("checkIn").value))} – ${escapeHtml(prettyDate($("checkOut").value))}${available > 0 ? ` · only ${available} left` : ""}</small>` : ""}
+        ${soldOut ? `<small class="sold-out-copy">Unavailable for ${escapeHtml(prettyDate($("checkIn").value))} – ${escapeHtml(prettyDate($("checkOut").value))}${available > 0 ? ` · only ${available} left` : ""}</small>` : !availabilityChecked ? '<small class="availability-prompt">Click Search Stays to check these dates.</small>' : ""}
       </div>
     </article>
   `;
@@ -506,14 +518,17 @@ function openRoomDetails(id) {
   $("roomDetailsAmenities").innerHTML = room.amenities.map((item) => `<span><b>✓</b> ${escapeHtml(item)}</span>`).join("");
 
   const alreadySelected = Number(state.selectedRoom?.id) === Number(room.id);
-  const canBook = roomCanSatisfySelection(room.id);
+  const availabilityChecked = state.availabilityLoaded;
+  const canBook = availabilityChecked && roomCanSatisfySelection(room.id);
   state.pendingMealPlan = alreadySelected ? state.mealPlan : "ROOM_ONLY";
   document.querySelectorAll('input[name="mealPlan"]').forEach((input) => {
     input.checked = input.value === state.pendingMealPlan;
   });
-  $("roomDetailsSelect").textContent = canBook
-    ? (alreadySelected ? "Update room & meal plan" : "Select this room")
-    : "Sold out for selected dates";
+  $("roomDetailsSelect").textContent = !availabilityChecked
+    ? "Search stays to check availability"
+    : canBook
+      ? (alreadySelected ? "Update room & meal plan" : "Select this room")
+      : "Sold out for selected dates";
   $("roomDetailsSelect").disabled = !canBook;
   $("roomDetailsModal").hidden = false;
   document.body.style.overflow = "hidden";
@@ -580,6 +595,12 @@ function dinnerChargePerNight() {
   return selectedMealPlan().dinner ? totalPeople() * DINNER_PRICE_PER_PERSON : 0;
 }
 
+function memberPointsDiscount(grossTotal) {
+  const points = Number(state.authUser?.rewardPoints || 0);
+  if (!state.authUser || points <= 0 || grossTotal <= 0) return 0;
+  return Math.min(points, Math.round(grossTotal));
+}
+
 function validateOccupancy() {
   state.guestRooms.forEach((entry, index) => {
     const adults = Number(entry.adults || 0);
@@ -595,6 +616,18 @@ function validateOccupancy() {
       throw new Error(`Room ${index + 1} can have at most 2 adults when a child is included.`);
     }
   });
+}
+
+function calculateGrossTotal() {
+  const nights = numberOfNights();
+  const room = state.selectedRoom;
+  if (!room || nights <= 0) return 0;
+  const baseAmount = nights * Number(room.pricePerNight) * state.guestRooms.length;
+  const childAmount = nights * childSupplementPerNight();
+  const breakfastAmount = nights * breakfastChargePerNight();
+  const dinnerAmount = nights * dinnerChargePerNight();
+  const subtotal = baseAmount + childAmount + breakfastAmount + dinnerAmount;
+  return subtotal + Math.round(subtotal * 0.12);
 }
 
 function updateSummary() {
@@ -619,6 +652,8 @@ function updateSummary() {
     $("breakfastChargeRow").hidden = true;
     $("dinnerChargeRow").hidden = true;
     $("taxAmount").textContent = "—";
+    $("memberPointsRow").hidden = true;
+    $("memberPointsAmount").textContent = "—";
     $("totalAmount").textContent = "—";
     $("continueButton").disabled = true;
     return;
@@ -636,6 +671,8 @@ function updateSummary() {
   const mealPlan = selectedMealPlan();
   const subtotal = baseAmount + childAmount + breakfastAmount + dinnerAmount;
   const taxes = Math.round(subtotal * 0.12);
+  const grossTotal = subtotal + taxes;
+  const pointsDiscount = memberPointsDiscount(grossTotal);
   $("roomAmount").textContent = baseAmount ? formatMoney(baseAmount) : "—";
   $("childSupplementRow").hidden = childAmount <= 0;
   $("childSupplementAmount").textContent = childAmount ? formatMoney(childAmount) : "—";
@@ -645,14 +682,18 @@ function updateSummary() {
   $("dinnerChargeRow").hidden = dinnerAmount <= 0;
   $("dinnerChargeAmount").textContent = dinnerAmount ? formatMoney(dinnerAmount) : "—";
   $("taxAmount").textContent = subtotal ? formatMoney(taxes) : "—";
-  $("totalAmount").textContent = subtotal ? formatMoney(subtotal + taxes) : "—";
-  $("continueButton").disabled = !(room && nights > 0);
+  $("memberPointsRow").hidden = pointsDiscount <= 0;
+  $("memberPointsLabel").textContent = pointsDiscount > 0 ? `Member points (${pointsDiscount} pts)` : "Member points";
+  $("memberPointsAmount").textContent = pointsDiscount > 0 ? `−${formatMoney(pointsDiscount)}` : "—";
+  $("totalAmount").textContent = subtotal ? formatMoney(Math.max(0, grossTotal - pointsDiscount)) : "—";
+  $("continueButton").disabled = !(room && nights > 0 && state.availabilityLoaded);
 }
 
 function validateStay() {
   const nights = numberOfNights();
   if (!$("checkIn").value || !$("checkOut").value) throw new Error("Choose check-in and check-out dates.");
   if (nights <= 0) throw new Error("Check-out must be after check-in.");
+  if (!state.availabilityLoaded) throw new Error("Click Search Stays to check availability for these dates.");
   if (!state.selectedRoom) throw new Error("Choose a room type.");
   if (!roomCanSatisfySelection(state.selectedRoom.id)) {
     throw new Error("The selected room is sold out for these dates. Choose another room or different dates.");
@@ -714,6 +755,7 @@ async function createGuest() {
 async function createHold(customerId) {
   validateStay();
   const created = [];
+  const pointsToRedeem = memberPointsDiscount(calculateGrossTotal());
   try {
     for (let i = 0; i < state.guestRooms.length; i += 1) {
       const roomGuests = state.guestRooms[i];
@@ -726,7 +768,8 @@ async function createHold(customerId) {
           checkOutDate: $("checkOut").value,
           adults: Number(roomGuests.adults),
           childAge: roomGuests.childAge === null || roomGuests.childAge === "" ? null : Number(roomGuests.childAge),
-          mealPlan: state.mealPlan
+          mealPlan: state.mealPlan,
+          rewardPointsToRedeem: i === 0 ? pointsToRedeem : 0
         })
       });
       if (!booking?.id) throw new Error("Booking was created but no booking ID was returned.");
@@ -778,7 +821,15 @@ async function confirmBooking() {
     $("holdTimer").textContent = "CONFIRMED";
     $("confirmButton").hidden = true;
     $("cancelButton").hidden = true;
-    toast(`${ids.length} room${ids.length === 1 ? "" : "s"} confirmed successfully.`);
+    const redeemedPoints = memberPointsDiscount(calculateGrossTotal());
+    if (state.authUser && redeemedPoints > 0) {
+      state.authUser = {
+        ...state.authUser,
+        rewardPoints: Math.max(0, Number(state.authUser.rewardPoints || 0) - redeemedPoints)
+      };
+      renderProfile();
+    }
+    toast(`${ids.length} room${ids.length === 1 ? "" : "s"} confirmed successfully.${redeemedPoints ? ` ${redeemedPoints} member points redeemed.` : ""}`);
     loadMemberBookings();
   } catch (error) {
     toast(error.message);
@@ -1159,10 +1210,9 @@ function validateStayDatesOnly() {
   if (numberOfNights() <= 0) throw new Error("Check-out must be after check-in.");
 }
 
-["checkIn", "checkOut"].forEach((id) => $(id).addEventListener("change", async () => {
+["checkIn", "checkOut"].forEach((id) => $(id).addEventListener("change", () => {
   if (id === "checkIn") $("checkOut").min = $("checkIn").value;
-  if (numberOfNights() > 0) await loadAvailability();
-  else updateSummary();
+  invalidateAvailability();
 }));
 
 $("priceRange").addEventListener("input", () => {
@@ -1233,9 +1283,9 @@ $("cancelButton").addEventListener("click", cancelBooking);
 
 defaultDates();
 initAuthentication();
-loadRoomTypes().then(async () => {
-  await loadAvailability();
-  const firstAvailable = state.roomTypes.find((room) => roomCanSatisfySelection(room.id));
-  if (firstAvailable) selectRoom(firstAvailable.id);
-  else updateSummary();
+loadRoomTypes().then(() => {
+  state.availabilityLoaded = false;
+  state.availabilityByRoomType = {};
+  renderRooms();
+  updateSummary();
 });
