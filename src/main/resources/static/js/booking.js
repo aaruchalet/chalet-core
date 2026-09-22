@@ -50,7 +50,8 @@ const fallbackRooms = [
   }
 ];
 
-const BREAKFAST_PRICE_PER_PERSON = 350;
+const BREAKFAST_PRICE_PER_PERSON = 250;
+const DINNER_PRICE_PER_PERSON = 350;
 const MEAL_PLANS = {
   ROOM_ONLY: { label: "Room only", breakfast: false, dinner: false },
   BREAKFAST_ONLY: { label: "Breakfast only", breakfast: true, dinner: false },
@@ -500,6 +501,10 @@ function breakfastChargePerNight() {
   return selectedMealPlan().breakfast ? totalPeople() * BREAKFAST_PRICE_PER_PERSON : 0;
 }
 
+function dinnerChargePerNight() {
+  return selectedMealPlan().dinner ? totalPeople() * DINNER_PRICE_PER_PERSON : 0;
+}
+
 function validateOccupancy() {
   state.guestRooms.forEach((entry, index) => {
     const adults = Number(entry.adults || 0);
@@ -537,7 +542,7 @@ function updateSummary() {
     $("childSupplementRow").hidden = true;
     $("mealPlanSummary").textContent = "Room only";
     $("breakfastChargeRow").hidden = true;
-    $("dinnerNoticeRow").hidden = true;
+    $("dinnerChargeRow").hidden = true;
     $("taxAmount").textContent = "—";
     $("totalAmount").textContent = "—";
     $("continueButton").disabled = true;
@@ -552,8 +557,9 @@ function updateSummary() {
   const baseAmount = nights > 0 ? nights * Number(room.pricePerNight) * roomCount : 0;
   const childAmount = nights > 0 ? nights * childSupplementPerNight() : 0;
   const breakfastAmount = nights > 0 ? nights * breakfastChargePerNight() : 0;
+  const dinnerAmount = nights > 0 ? nights * dinnerChargePerNight() : 0;
   const mealPlan = selectedMealPlan();
-  const subtotal = baseAmount + childAmount + breakfastAmount;
+  const subtotal = baseAmount + childAmount + breakfastAmount + dinnerAmount;
   const taxes = Math.round(subtotal * 0.12);
   $("roomAmount").textContent = baseAmount ? formatMoney(baseAmount) : "—";
   $("childSupplementRow").hidden = childAmount <= 0;
@@ -561,7 +567,8 @@ function updateSummary() {
   $("mealPlanSummary").textContent = mealPlan.label;
   $("breakfastChargeRow").hidden = breakfastAmount <= 0;
   $("breakfastChargeAmount").textContent = breakfastAmount ? formatMoney(breakfastAmount) : "—";
-  $("dinnerNoticeRow").hidden = !mealPlan.dinner;
+  $("dinnerChargeRow").hidden = dinnerAmount <= 0;
+  $("dinnerChargeAmount").textContent = dinnerAmount ? formatMoney(dinnerAmount) : "—";
   $("taxAmount").textContent = subtotal ? formatMoney(taxes) : "—";
   $("totalAmount").textContent = subtotal ? formatMoney(subtotal + taxes) : "—";
   $("continueButton").disabled = !(room && nights > 0);
