@@ -44,7 +44,7 @@ button{cursor:pointer}
 .hero-benefits p{display:grid;margin:0}
 .hero-benefits strong{font-size:13px}
 .hero-benefits small{font-size:11px;color:#dce6e2;margin-top:3px}
-.search-bar{position:absolute;z-index:3;left:5.2vw;right:5.2vw;bottom:-38px;min-height:76px;background:#fff;border-radius:10px;box-shadow:0 14px 38px rgba(0,0,0,.19);display:grid;grid-template-columns:1.25fr 1fr 1fr 1.15fr auto;align-items:stretch;overflow:hidden;color:var(--ink)}
+.search-bar{position:absolute;z-index:3;left:5.2vw;right:5.2vw;bottom:-38px;min-height:76px;background:#fff;border-radius:10px;box-shadow:0 14px 38px rgba(0,0,0,.19);display:grid;grid-template-columns:1.25fr 1fr 1fr 1.15fr auto;align-items:stretch;overflow:visible;color:var(--ink)}
 .search-field{display:flex;align-items:center;gap:13px;padding:14px 22px;border-right:1px solid #dfe4e2}
 .field-icon{font-size:24px;color:#10231e}
 .field-copy{display:grid;gap:3px;flex:1}
@@ -240,9 +240,6 @@ button{cursor:pointer}
 .child-policy strong{font-size:10px;color:var(--forest)}
 .guest-apply-button{width:100%;margin-top:11px;border:0;border-radius:8px;padding:11px;background:var(--forest);color:#fff;font-weight:800}
 
-.save-stay-button{position:absolute;right:9px;top:9px;width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.93);color:var(--forest);font-size:20px;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.14);z-index:2}
-.save-stay-button.saved{background:var(--forest);color:#fff}
-
 .section-heading{max-width:740px}
 .section-heading.centered{text-align:center;margin:0 auto 28px}
 .section-heading h2,.about-copy h2,.contact-section h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:42px;line-height:1.03;margin:5px 0 12px;color:var(--ink)}
@@ -305,14 +302,6 @@ button{cursor:pointer}
 .booking-history-card>div,.payment-card>div{display:grid;gap:4px}
 .payment-card{grid-template-columns:1fr auto;align-items:center}
 .payment-card span{font-size:9px;background:#eef5f2;color:var(--forest);padding:6px 8px;border-radius:999px}
-.wishlist-list{display:grid;gap:9px}
-.wishlist-card{display:grid;grid-template-columns:74px 1fr auto;gap:12px;align-items:center;border:1px solid #e1e8e4;border-radius:10px;padding:8px}
-.wishlist-thumb{width:74px;height:62px;border-radius:8px;background-size:cover;background-position:center}
-.wishlist-card>div:nth-child(2){display:grid;gap:4px}
-.wishlist-card strong{font-size:12px}
-.wishlist-card small{font-size:9px;color:var(--muted)}
-.wishlist-card button{border:0;background:transparent;color:var(--danger);font-size:10px;font-weight:800}
-
 .experience-form{display:grid;gap:13px}
 .experience-form label{display:grid;gap:6px;font-size:10px;font-weight:800;color:#485650}
 .experience-form input,.experience-form textarea{width:100%;border:1px solid #cfd9d5;border-radius:8px;padding:11px;outline:0}
@@ -339,6 +328,43 @@ button{cursor:pointer}
   .profile-grid{grid-template-columns:1fr}
   .about-points{grid-template-columns:1fr}
   .account-tabs{grid-template-columns:1fr}
-  .wishlist-card{grid-template-columns:64px 1fr}
-  .wishlist-card button{grid-column:2}
+}
+
+
+/* Room selector and details refinements */
+.search-bar{z-index:60}
+.guest-selector-panel{z-index:140}
+.room-guide p{margin:0;color:var(--muted);font-size:10px;line-height:1.6}
+.selected-badge{position:absolute;right:9px;top:9px;background:var(--forest);color:#fff;padding:5px 9px;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:.03em}
+
+.room-details-modal{width:min(920px,96vw);max-height:90vh;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 28px 90px rgba(0,0,0,.3);position:relative}
+.room-details-image{height:320px;background-size:cover;background-position:center;border-radius:20px 20px 0 0}
+.room-details-content{padding:26px}
+.room-details-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:start}
+.room-details-heading h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:42px;line-height:1;margin:3px 0 10px}
+.room-details-heading p:last-child{margin:0;color:var(--muted);font-size:12px;line-height:1.65;max-width:650px}
+.room-details-rate{text-align:right;display:grid;white-space:nowrap;padding-top:18px}
+.room-details-rate strong{font-size:22px;color:var(--forest)}
+.room-details-rate small{font-size:9px;color:var(--muted)}
+.room-detail-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0}
+.room-detail-facts>div{display:flex;align-items:center;gap:9px;padding:12px;border-radius:10px;background:#f5f8f6}
+.room-detail-facts span{color:var(--forest);font-size:16px}
+.room-detail-facts strong{font-size:11px}
+.room-amenities-block{border-top:1px solid var(--line);padding-top:20px}
+.room-amenities-block h3{margin:0 0 12px;font-size:14px}
+.room-amenities-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.room-amenities-grid span{padding:10px 12px;border:1px solid #e3e9e6;border-radius:9px;font-size:10px;color:#425049;background:#fbfcfb}
+.room-amenities-grid b{color:var(--forest);margin-right:5px}
+.room-details-actions{display:flex;justify-content:flex-end;margin-top:22px}
+.room-details-select{min-width:190px;border:0;border-radius:8px;padding:12px 18px;background:var(--forest);color:#fff;font-weight:800}
+.room-details-select:disabled{background:#dce6e2;color:#60706a;cursor:default}
+
+@media(max-width:760px){
+  .room-details-image{height:230px}
+  .room-details-heading{grid-template-columns:1fr}
+  .room-details-rate{text-align:left;padding-top:0}
+  .room-detail-facts{grid-template-columns:1fr}
+  .room-amenities-grid{grid-template-columns:1fr}
+  .room-details-actions{display:block}
+  .room-details-select{width:100%}
 }
