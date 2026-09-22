@@ -368,3 +368,56 @@ button{cursor:pointer}
   .room-details-actions{display:block}
   .room-details-select{width:100%}
 }
+
+
+/* Booking-style guest typography and meal-plan controls */
+.guest-selector-panel,
+.guest-selector-panel button,
+.guest-selector-panel select,
+.guest-selector-trigger,
+.room-card-actions button,
+.meal-plan-block {
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+.guest-selector-trigger{font-size:15px;line-height:1.35}
+.guest-selector-head strong{font-size:17px;line-height:1.3}
+.guest-selector-head small{font-size:13px;line-height:1.45}
+.room-count-control{font-size:13px;gap:7px}
+.room-count-control select{font-size:15px;min-width:74px;padding:9px 30px 9px 11px}
+.guest-room-title strong{font-size:16px}
+.guest-room-title small{font-size:12px;margin-top:4px}
+.guest-room-card label{font-size:13px;gap:7px}
+.guest-room-card select{font-size:15px;padding:10px 11px;min-height:42px}
+.room-rule-message{font-size:12px;line-height:1.45}
+.child-policy{font-size:12px;line-height:1.55;padding:13px}
+.child-policy strong{font-size:13px}
+.guest-selector-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.guest-apply-button{margin-top:0;font-size:14px;min-height:44px}
+.add-room-button{width:100%;border:1px solid #b8cbc3;border-radius:8px;padding:11px;background:#fff;color:var(--forest);font-size:14px;font-weight:800}
+.add-room-button:hover,.room-add-inline:hover{background:#eef5f2}
+.room-add-inline{grid-column:1/-1;justify-self:start;border:0;border-radius:8px;padding:8px 10px;background:#eef5f2;color:var(--forest);font-size:12px;font-weight:800}
+.room-add-inline[hidden]{display:none}
+
+.room-card-actions{display:grid;gap:8px;margin-top:12px}
+.view-details-button,.select-stay-button{width:100%;border-radius:8px;padding:10px 12px;font-size:12px;font-weight:800}
+.view-details-button{border:1px solid #b7c9c1;background:#fff;color:var(--forest)}
+.select-stay-button{border:0;background:var(--forest);color:#fff}
+.select-stay-button.selected{background:#dce8e3;color:var(--forest)}
+
+.meal-plan-block{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}
+.meal-plan-block>div:first-child h3{margin:0 0 6px;font-size:15px}
+.meal-plan-block>div:first-child p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
+.meal-plan-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.meal-plan-options label{position:relative;display:block;cursor:pointer}
+.meal-plan-options input{position:absolute;opacity:0;pointer-events:none}
+.meal-plan-options span{display:grid;gap:4px;height:100%;padding:13px;border:1px solid #d7e1dc;border-radius:10px;background:#fff}
+.meal-plan-options strong{font-size:13px;color:var(--ink)}
+.meal-plan-options small{font-size:11px;line-height:1.4;color:var(--muted)}
+.meal-plan-options input:checked+span{border-color:var(--forest);box-shadow:0 0 0 2px rgba(13,59,52,.1);background:#f3f8f6}
+.meal-plan-options input:focus-visible+span{outline:3px solid rgba(39,104,91,.18)}
+#dinnerNoticeRow strong{color:#8a6556;font-size:10px;text-align:right}
+
+@media(max-width:760px){
+  .guest-selector-actions{grid-template-columns:1fr}
+  .meal-plan-options{grid-template-columns:1fr}
+}
