@@ -142,7 +142,7 @@ async function loadAuthState() {
 
 async function signInMember(event) {
   event.preventDefault();
-  setAuthStatus("Signing in…");
+  setAuthStatus("Signing in…", "success");
   try {
     const response = await api("/api/v1/auth/signin", {
       method: "POST",
@@ -168,7 +168,7 @@ async function signUpMember(event) {
     return;
   }
 
-  setAuthStatus("Creating your account…");
+  setAuthStatus("Creating your account…", "success");
   try {
     const response = await api("/api/v1/auth/signup", {
       method: "POST",
@@ -229,7 +229,7 @@ async function verifyLoginOtp() {
     return;
   }
 
-  setAuthStatus("Verifying OTP…");
+  setAuthStatus("Verifying OTP…", "success");
   try {
     const response = await api("/api/v1/auth/otp/verify", {
       method: "POST",
