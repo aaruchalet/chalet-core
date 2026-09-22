@@ -33,7 +33,7 @@
     <div class="header-actions">
       <button class="currency-button" type="button">INR ₹ <span>⌄</span></button>
       <button class="icon-button" type="button" aria-label="Saved stays">♡</button>
-      <button class="sign-in-button" type="button"><span aria-hidden="true">♙</span> Sign in</button>
+      <button class="sign-in-button" id="signInButton" type="button"><span aria-hidden="true">♙</span> <span id="signInLabel">Sign in</span></button>
     </div>
   </header>
 
@@ -186,6 +186,105 @@
       <div><span>☏</span><p><strong>Guest Support</strong><small>We’re here to help</small></p></div>
     </section>
   </main>
+
+
+  <div class="modal-backdrop" id="authModal" hidden>
+    <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <button class="modal-close" id="authModalClose" type="button" aria-label="Close">×</button>
+
+      <div id="authSignedOut">
+        <p class="modal-kicker">Aaru’s Chalet membership</p>
+        <h2 id="authModalTitle">Welcome back</h2>
+        <p class="modal-intro" id="authModalIntro">Sign in as an existing guest or member, or create a new account.</p>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" type="button" data-auth-mode="signin">Sign in</button>
+          <button class="auth-tab" type="button" data-auth-mode="signup">Sign up</button>
+        </div>
+
+        <button class="google-auth-button" id="googleAuthButton" type="button">
+          <svg class="google-mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.51h3.24c1.9-1.75 2.98-4.34 2.98-7.38Z"/>
+            <path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.39l-3.24-2.51c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.59A10 10 0 0 0 12 22Z"/>
+            <path fill="#FBBC05" d="M6.39 13.93A6 6 0 0 1 6.08 12c0-.67.11-1.32.31-1.93V7.48H3.04A10 10 0 0 0 2 12c0 1.61.38 3.13 1.04 4.52l3.35-2.59Z"/>
+            <path fill="#EA4335" d="M12 5.94c1.47 0 2.79.51 3.83 1.5l2.87-2.88A9.64 9.64 0 0 0 12 2a10 10 0 0 0-8.96 5.48l3.35 2.59C7.18 7.7 9.39 5.94 12 5.94Z"/>
+          </svg>
+          Continue with Google
+        </button>
+        <p class="google-config-note" id="googleConfigNote" hidden>Google sign-in needs OAuth credentials in the server configuration.</p>
+
+        <div class="divider"><span>or continue directly</span></div>
+
+        <div class="auth-pane" id="signInPane">
+          <form class="auth-form" id="signInForm">
+            <label>
+              <span>Email or phone number</span>
+              <input id="signInIdentifier" autocomplete="username" required placeholder="Email or 10-digit phone">
+            </label>
+            <label>
+              <span>Password</span>
+              <input id="signInPassword" type="password" autocomplete="current-password" required placeholder="Your password">
+            </label>
+            <button class="modal-primary" type="submit">Sign in</button>
+          </form>
+
+          <div class="auth-or"><span>or sign in with OTP</span></div>
+          <button class="auth-secondary" id="otpRequestButton" type="button">Send login OTP</button>
+
+          <div class="otp-panel" id="otpPanel" hidden>
+            <p id="otpStatus">Enter the 6-digit OTP.</p>
+            <div class="otp-row">
+              <input id="otpCode" inputmode="numeric" maxlength="6" placeholder="6-digit OTP">
+              <button id="otpVerifyButton" type="button">Verify OTP</button>
+            </div>
+          </div>
+
+          <p class="auth-switch-copy">New guest or member? <button class="auth-link" id="openSignUp" type="button">Create an account</button></p>
+        </div>
+
+        <div class="auth-pane" id="signUpPane" hidden>
+          <form class="auth-form" id="signUpForm">
+            <div class="auth-form-grid">
+              <label>
+                <span>Full name</span>
+                <input id="signUpName" autocomplete="name" required placeholder="Your full name">
+              </label>
+              <label>
+                <span>Email</span>
+                <input id="signUpEmail" type="email" autocomplete="email" required placeholder="you@example.com">
+              </label>
+              <label>
+                <span>Phone number</span>
+                <input id="signUpPhone" inputmode="numeric" maxlength="10" autocomplete="tel" required placeholder="10-digit number">
+              </label>
+              <label>
+                <span>Where do you belong?</span>
+                <input id="signUpLocation" autocomplete="address-level2" required placeholder="City, state">
+              </label>
+            </div>
+            <label>
+              <span>Password</span>
+              <input id="signUpPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required placeholder="Minimum 8 characters">
+            </label>
+            <button class="modal-primary" type="submit">Create account</button>
+          </form>
+
+          <p class="auth-switch-copy">Already a guest or member? <button class="auth-link" id="openSignIn" type="button">Sign in</button></p>
+        </div>
+
+        <p class="auth-status" id="authStatus"></p>
+      </div>
+
+      <div class="signed-in-panel" id="authSignedIn" hidden>
+        <div class="member-avatar" id="memberAvatar">A</div>
+        <p class="modal-kicker">Signed in</p>
+        <h2 id="signedInName">Aaru’s Chalet member</h2>
+        <p class="modal-intro" id="signedInDetails"></p>
+        <button class="modal-primary" id="authDoneButton" type="button">Continue browsing</button>
+        <button class="auth-secondary danger-outline" id="logoutButton" type="button">Sign out</button>
+      </div>
+    </section>
+  </div>
 
   <div class="modal-backdrop" id="guestModal" hidden>
     <section class="guest-modal" role="dialog" aria-modal="true" aria-labelledby="guestModalTitle">
